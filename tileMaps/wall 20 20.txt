@@ -1,0 +1,22 @@
+# tilemap 20 x 20 
+# with wall: notified in +
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w + + w w w w w w w w w
+w w w w w w w w w + + w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w

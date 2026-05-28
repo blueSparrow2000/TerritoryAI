@@ -1,0 +1,11 @@
+# simple 
+# True
+w r r r w w w w
+w r w r w w w w
+w r r w w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w b w
+w w w w w w w w

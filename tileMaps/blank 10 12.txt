@@ -1,0 +1,13 @@
+# blank tilemap 10 x 12
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w
+w w w w w w w w w w

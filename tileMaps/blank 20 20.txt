@@ -1,0 +1,21 @@
+# blank tilemap 20 x 20
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w
+w w w w w w w w w w w w w w w w w w w w

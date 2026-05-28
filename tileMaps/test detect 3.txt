@@ -1,0 +1,10 @@
+# corner 1  going right from (3,3) wrapping the region
+w r w w r w w w
+w r w w r w w w
+w r w w r w w w
+w r r r w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w b w
+w w w w w w w w

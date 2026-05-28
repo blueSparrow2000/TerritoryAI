@@ -1,0 +1,10 @@
+# simple wall - going up from (1,0) wrapping the region
+w r w r w w w w
+w r w r w w w w
+w r r r w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w w w
+w w w w w w b w
+w w w w w w w w
