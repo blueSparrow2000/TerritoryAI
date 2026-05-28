@@ -13,7 +13,7 @@ class BotInfo:
     y: int = -1
 
 TileMapName = 'box 20 20'
-BotList = [('bot', True)]  # [('bot', False),('spiral', False),('spiral', False) ]
+BotList = [('spiral', True)]  # [('bot', False),('spiral', False),('spiral', False) ]
 
 #############################################
 
