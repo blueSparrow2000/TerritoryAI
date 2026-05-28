@@ -24,6 +24,25 @@ def read_tile_map(fileName):
 
     return tiles
 
+def write_trajectory_data(fileName, data_list):
+    APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/trajectoryData/'
+    full_path = os.path.join(APP_FOLDER, '{}.txt'.format(fileName))
+    # print(data_list)
+    data = " ".join(map(str, data_list))
+    with open(full_path, "w") as f:
+        f.write(data)
+
+def read_trajectory_data(fileName):
+    APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/trajectoryData/'
+    full_path = os.path.join(APP_FOLDER, '{}.txt'.format(fileName))
+    data = []
+    # instantiate each text into tiles
+    with open(full_path, "r") as f:
+        line = f.readline().strip().split(' ') # 공백 구분자
+        data = list(map(int, line))
+    return data
+
+
 def printMat(tiles):
     xlen = len(tiles[0])
     for y in range(len(tiles)):

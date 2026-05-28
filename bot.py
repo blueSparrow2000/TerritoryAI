@@ -41,8 +41,9 @@ class Bot(Tile):
 
         # reset trace
         if self.traceMode:
-            # print("trace of: {}".format(self.color) )
-            print(self.direction_trace) ###################### 프린트 하지 말고 텍스트 파일에 덮어쓰도록 하기 - 실행 다 끝나고 에러 발견시, 리셋된 다음 시작하려할때 게임 끄면 직전 게임이 저장되어있음. 반드시 리셋 부른 후 꺼야함
+            # 실행 다 끝나고 에러 발견시, 리셋된 다음 시작하려할때 게임 끄면 직전 게임이 저장되어있음. 반드시 리셋 부른 후 꺼야함
+            write_trajectory_data("trace", self.direction_trace)
+            # print(self.direction_trace)
             self.direction_trace = []
 
     def setInitialStandingTileColor(self,tiles):
@@ -229,6 +230,7 @@ class Bot(Tile):
         # region is surrounded by only the given color
         Tile.set_colors(tiles, region)
         Tile.set_enclosed(tiles, region) # set enclosed
+        # enclosed 그래픽이 문제가 아닌거 같은데 겜이 안끝나
 
         enclosed_region_size = len(region)
         self.score += enclosed_region_size

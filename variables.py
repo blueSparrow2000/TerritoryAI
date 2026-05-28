@@ -3,17 +3,16 @@ from dataclasses import dataclass
 from typing import Any
 
 
-
-
 ######## Simulation configuration ##########
 @dataclass
 class BotInfo:
+    type: str = 'bot'
     setTrace: bool = False
     x: int = -1
     y: int = -1
 
-TileMapName = 'box 20 20'
-BotList = [('spiral', True)]  # [('bot', False),('spiral', False),('spiral', False) ]
+TileMapName = 'blank 20 20'
+BotList = [('bot', True)] #[('bot', False),('bot', False),('spiral', False) ] #[('spiral', False)]  #
 
 #############################################
 
@@ -78,3 +77,12 @@ def delta_given_direction(direction):
         dy -= 1
     return dx,dy
 
+# for dir in clock_wise:
+#     print(dir)
+#     or1, or2 = get_orthogonal_directions(dir)
+#     print(or1)
+#     print(delta_given_direction(or1))
+#     print()
+#     print(or2)
+#     print(delta_given_direction(or2))
+#     print("*"*10)

@@ -6,5 +6,8 @@
 #             info += str(data[y][x]) + ' '
 #
 #         print(info)
-import random
-print("+ "*20)
+s = [1,2,3]
+
+g = " ".join(map(str, s))
+
+print(g)
