@@ -6,8 +6,9 @@
 #             info += str(data[y][x]) + ' '
 #
 #         print(info)
-s = [1,2,3]
 
-g = " ".join(map(str, s))
+region = [ [(1,2)], [(0,3)]]
 
-print(g)
+region[-1] += [(1,2), (2,4)]
+
+print(region)

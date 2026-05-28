@@ -54,11 +54,11 @@ class TerritoryGameEnvironment:
                 botTraj = bot_traj_data[3]
 
                 bot = Bot(botX, botY, botColor)
+                self.trajectory_length = len(botTraj) # 한번만 세팅해주면 되는데 여러번 세팅하고있음 (많아야 봇 개수만큼, 어차피 다 같을것)
+                bot.load_trajectory(botTraj)
+
                 bot.setInitialStandingTileColor(self.tiles)  # set the initial standing tile color
 
-                self.trajectory_length = len(botTraj) # 한번만 세팅해주면 되는데 여러번 세팅하고있음 (많아야 봇 개수만큼, 어차피 다 같을것)
-
-                bot.load_trajectory(botTraj)
                 self.other_players.append(bot)
 
             self.entities = self.other_players # same as other players list
@@ -256,6 +256,7 @@ class TerritoryGameEnvironment:
 
     def simulate_trajectory(self):
         execute_trajectory = False
+        revert_no_occupation = False
         # for faster trajectory
         keys = pygame.key.get_pressed()  # 꾹 누르고 있으면 계속 실행되는 것들
         if keys[pygame.K_RETURN]:
@@ -263,6 +264,7 @@ class TerritoryGameEnvironment:
             self.proceed_trajectory()
         if keys[pygame.K_BACKSPACE]:
             execute_trajectory = True
+            revert_no_occupation = True
             self.revert_trajectory()
 
         # for faster trajectory
@@ -276,6 +278,7 @@ class TerritoryGameEnvironment:
                     self.proceed_trajectory()
                 elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_LEFT: # GO BACK TRAJECTORY
                     execute_trajectory = True
+                    revert_no_occupation = True
                     self.revert_trajectory()
 
         game_over = False
@@ -289,10 +292,15 @@ class TerritoryGameEnvironment:
             for botE in self.entities:
                 this_direction = botE.get_trajectory_direction()
                 if this_direction:
+                    # free the tiles should be called only on revert
+                    if revert_no_occupation:
+                        botE.free_the_tiles(self.tiles)
                     botE.setDirection(this_direction)
                     botE.enforceTarget(self.row, self.col, self.tiles)
-                    botE.move()
-                    botE.detect_possible_Enclosure(self.tiles)
+                    # botE.move()
+                    # botE.detect_possible_Enclosure(self.tiles)
+                    botE.move(revert_no_occupation)
+                    botE.detect_possible_Enclosure(self.tiles,revert_no_occupation)
 
 
         # update with respect to trajectory given

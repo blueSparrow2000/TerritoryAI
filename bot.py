@@ -20,11 +20,16 @@ class Bot(Tile):
         self.traceMode = False
         self.direction_trace = [] # all history of movement directions
 
+        self.trajectory_tracking_mode = False
         self.loaded_trajectory = deque([])
         self.trajectory_direction = None
 
+        self.occupation_stack = []
+
+    ################################## trajectory load stuff #########################
     def load_trajectory(self, traj):
         self.loaded_trajectory = deque(traj)
+        self.trajectory_tracking_mode = True
 
     def reset_trajectory_direction(self):
         self.trajectory_direction = None  # if no op
@@ -45,10 +50,18 @@ class Bot(Tile):
         #     # keep track of occupition region / tile that happened in each step, and revert (set color white)
         #     pass
 
+    def free_the_tiles(self, tiles):
+        # print("free called: ", self.occupation_stack)
+        if len(self.occupation_stack) > 1: # dont take out the very first standing tile
+            coordinates = self.occupation_stack.pop()
+            target_coords_and_colors = list(map(lambda x:(x[0],x[1],'white'),coordinates))
+            Tile.set_colors(tiles, target_coords_and_colors)
+
+
     def get_trajectory_direction(self):
-        # return trajectory direction
         return self.trajectory_direction
 
+    ################################## start saving trajectory #########################
     def setTraceMode(self, traceMode):
         self.traceMode = traceMode
 
@@ -78,6 +91,9 @@ class Bot(Tile):
 
     def setInitialStandingTileColor(self,tiles):
         tiles[self.y][self.x].setColor(self.color)  # set the initial standing tile color
+
+        self.add_occupation_stack([(self.x, self.y)])
+
 
     def getScore(self):
         return self.score
@@ -164,11 +180,13 @@ class Bot(Tile):
     '''
     현재 향하려는 방향으로 실제로 한칸 이동. 이때 propagate해야할듯? 
     '''
-    def move(self):
+    def move(self,revert_no_occupation = False):
+        occupied_blocks = []
         # no target or already occupied - dont move: wait for assigning the new target
         if not self.isTargetValid():
             # invalid move => append 0
             if self.traceMode: self.direction_trace.append(0)  # save as int format
+            if not revert_no_occupation: self.add_occupation_stack(occupied_blocks)
             return
 
         dx,dy = delta_given_direction(self.direction)
@@ -177,6 +195,9 @@ class Bot(Tile):
 
         if self.traceMode: self.direction_trace.append(int(self.direction)) # save as int format
 
+        if revert_no_occupation: # dont execute below - just move the head tile
+            return
+
         if self.x == self.target.x and self.y == self.target.y: # arrived on target
             # set color of the current tile to my color
             occupied = self.target.setColor(self.color)
@@ -184,14 +205,26 @@ class Bot(Tile):
             # add score and reset the target
             self.target = None
             if occupied:
+                occupied_blocks.append((self.x, self.y))
                 self.score += 1
 
+        self.add_occupation_stack(occupied_blocks)
 
+    def add_occupation_stack(self, coordinates):
+        if self.trajectory_tracking_mode:
+            self.occupation_stack.append(coordinates)
+            # print(self.occupation_stack)
+
+    def append_occupation_stack(self, coordinates):
+        if self.trajectory_tracking_mode:
+            self.occupation_stack[-1] += coordinates
     '''
     Additional algorithm for enclosure detection
     should be called after move
     '''
-    def detect_possible_Enclosure(self, tiles):
+    def detect_possible_Enclosure(self, tiles,revert_no_occupation = False):
+        if revert_no_occupation: # dont have to check enclosure
+            return
         col, row = len(tiles[0]), len(tiles)
         dx,dy = delta_given_direction(self.direction) # direction to find future block (a block that agent will pass if it keeps the direction on the next step)
 
@@ -261,6 +294,8 @@ class Bot(Tile):
         Tile.set_colors(tiles, region)
         Tile.set_enclosed(tiles, region) # set enclosed
         # enclosed 그래픽이 문제가 아닌거 같은데 겜이 안끝나
+        coordinates = list(map(lambda x:(x[0],x[1]), region))
+        self.append_occupation_stack(coordinates)
 
         enclosed_region_size = len(region)
         self.score += enclosed_region_size
