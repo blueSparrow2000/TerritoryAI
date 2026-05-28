@@ -20,6 +20,35 @@ class Bot(Tile):
         self.traceMode = False
         self.direction_trace = [] # all history of movement directions
 
+        self.loaded_trajectory = deque([])
+        self.trajectory_direction = None
+
+    def load_trajectory(self, traj):
+        self.loaded_trajectory = deque(traj)
+
+    def reset_trajectory_direction(self):
+        self.trajectory_direction = None  # if no op
+
+    def set_forward_trajectory_direction(self, trajectory_index):
+        if self.loaded_trajectory[trajectory_index] != 0:  # if it is 0, it is no op
+            self.trajectory_direction = Direction(self.loaded_trajectory[trajectory_index])
+        else:
+            self.trajectory_direction = None # if no op
+
+    def set_reverse_trajectory_direction(self, trajectory_index):
+        if self.loaded_trajectory[trajectory_index] != 0:
+            self.trajectory_direction = get_reverse_direction(Direction(self.loaded_trajectory[trajectory_index]))  # reverse of the previous move
+        else:
+            self.trajectory_direction = None # if no op
+
+        # if is_revert:  # revert occupied land... 해당 이동이 occupy하는 이동인지, 원래 내 타일을 이동한거였는지, enclosure했다면 해당 region에 대한 정보 받아와야 함... trajectory진행하면서
+        #     # keep track of occupition region / tile that happened in each step, and revert (set color white)
+        #     pass
+
+    def get_trajectory_direction(self):
+        # return trajectory direction
+        return self.trajectory_direction
+
     def setTraceMode(self, traceMode):
         self.traceMode = traceMode
 
@@ -39,10 +68,11 @@ class Bot(Tile):
         # init score
         self.score = 1
 
+    def write_and_reset_trace(self, fileName):
         # reset trace
         if self.traceMode:
             # 실행 다 끝나고 에러 발견시, 리셋된 다음 시작하려할때 게임 끄면 직전 게임이 저장되어있음. 반드시 리셋 부른 후 꺼야함
-            write_trajectory_data("trace", self.direction_trace)
+            write_trajectory_data(fileName,self.initial_pos, self.color, self.direction_trace)
             # print(self.direction_trace)
             self.direction_trace = []
 
@@ -137,6 +167,8 @@ class Bot(Tile):
     def move(self):
         # no target or already occupied - dont move: wait for assigning the new target
         if not self.isTargetValid():
+            # invalid move => append 0
+            if self.traceMode: self.direction_trace.append(0)  # save as int format
             return
 
         dx,dy = delta_given_direction(self.direction)
@@ -185,8 +217,7 @@ class Bot(Tile):
         # for forward check
         xForward, yForward = xNext + dx, yNext + dy
 
-        # 찾음. 이거 하나라도 해당되면 다 해야하는거임 ㅋㅋㅋㅋ
-
+        # 찾음. 이거 하나라도 해당되면 셋 다 해야하는거임 ㅋㅋㅋㅋ
         # right, left diagonal corner and front - including wall tile is fine 닿여도 되는 부분 리스트임
         if (   (0 <= xDiag1 < col) and (0 <= yDiag1 < row) and (tiles[yDiag1][xDiag1].getColor() == self.color or tiles[yDiag1][xDiag1].is_wall())   ) or  (    (0 <= xDiag2 < col) and (0 <= yDiag2 < row) and (tiles[yDiag2][xDiag2].getColor() == self.color or tiles[yDiag2][xDiag2].is_wall())    ) or (    (0 <= xForward < col) and (0 <= yForward < row) and (tiles[yForward][xForward].getColor() == self.color or tiles[yForward][xForward].is_wall())    ):
             # tiles[yDiag1][xDiag1].turn_highlight_red()
@@ -200,7 +231,7 @@ class Bot(Tile):
     def call_propagate(self,tiles,row,col,pos):
         if (0 <= pos[0] < col) and (0 <= pos[1] < row) and tiles[pos[1]][pos[0]].getColor() == 'white':
             self.propagate(tiles, pos)
-            tiles[pos[1]][pos[0]].turn_highlight_red()
+            # tiles[pos[1]][pos[0]].turn_highlight_red()
 
     # HELPER: propagate empty tile region and check it is surrounded by my color
     def propagate(self, tiles, seed):

@@ -24,13 +24,25 @@ def read_tile_map(fileName):
 
     return tiles
 
-def write_trajectory_data(fileName, data_list):
+def init_trajectory_data(fileName, mapName):
+    APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/trajectoryData/'
+    full_path = os.path.join(APP_FOLDER, '{}.txt'.format(fileName))
+    with open(full_path, "w") as f:
+        f.write(mapName)
+        f.write('\n')
+
+def write_trajectory_data(fileName, bot_initial_pos, bot_color, data_list):
     APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/trajectoryData/'
     full_path = os.path.join(APP_FOLDER, '{}.txt'.format(fileName))
     # print(data_list)
-    data = " ".join(map(str, data_list))
-    with open(full_path, "w") as f:
-        f.write(data)
+    bot_info = "{} {} {}".format(bot_initial_pos[0], bot_initial_pos[1], bot_color)
+    trajectory = " ".join(map(str, data_list))
+
+    with open(full_path, "a") as f:
+        f.write(bot_info)
+        f.write('\n')
+        f.write(trajectory)
+        f.write('\n')
 
 def read_trajectory_data(fileName):
     APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/trajectoryData/'
@@ -38,8 +50,17 @@ def read_trajectory_data(fileName):
     data = []
     # instantiate each text into tiles
     with open(full_path, "r") as f:
-        line = f.readline().strip().split(' ') # 공백 구분자
-        data = list(map(int, line))
+        lines = [line.strip() for line in f.readlines()] # each lines
+        data.append(lines[0]) # mapname
+        lines = lines[1:]
+        bot_num = len(lines)//2
+        for bot_i in range(bot_num):
+            bot_info = lines[2 * bot_i].split(' ') # x, y, color
+            botx,boty,bot_color = int(bot_info[0]),int(bot_info[1]),bot_info[2]
+            bot_trajectory = list(map(int,  lines[2 * bot_i + 1].split(' ') ))
+            data.append([botx,boty,bot_color,bot_trajectory])
+        # line = f.readline().strip().split(' ') # 공백 구분자
+        # data = list(map(int, line))
     return data
 
 

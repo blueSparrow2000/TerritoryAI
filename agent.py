@@ -136,7 +136,10 @@ def train():
     total_score = 0
     record = 0
     agent = Agent()
-    game = TerritoryGameEnvironment(mapName = TileMapName, bot_infos = BotList)
+    # trace mode
+    # game = TerritoryGameEnvironment(trajectorySaveFileName = "traceAgent",mapName = TileMapName, bot_infos = BotList)
+    # without trace
+    game = TerritoryGameEnvironment(mapName=TileMapName, bot_infos=BotList)
     while True:
         # get old state
         state_old = agent.get_state(game)

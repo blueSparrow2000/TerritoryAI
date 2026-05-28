@@ -5,9 +5,18 @@ import time
 pygame.init()
 
 class TerritoryGameEnvironment:
-    def __init__(self, initial_x=1, initial_y=1, trajectoryTrackingMode = False, mapName = 'blank 10 12', bot_infos = [('bot', False),('spiral', False),('spiral', False) ]):
+    def __init__(self, initial_x=1, initial_y=1, trajectorySaveFileName = None,trajectoryTrackingFileName = None, mapName = 'blank 10 12', bot_infos = [('bot'),('spiral'),('spiral') ]):
+        self.trajectorySaveFileName = trajectorySaveFileName
+        self.trajectoryTrackingFileName = trajectoryTrackingFileName
+
+        self.mapName = mapName
+        trajectory_data = None # only used in trajectory simulation
+        if self.trajectoryTrackingFileName:
+            trajectory_data = read_trajectory_data(self.trajectoryTrackingFileName)
+            self.mapName = trajectory_data[0] # change map name
+
         # UNCHANGED: initialize tile board and display setting
-        tileMapData = read_tile_map(mapName)
+        tileMapData = read_tile_map(self.mapName)
         self.col, self.row = len(tileMapData[0]), len(tileMapData)
         WIDTH, HEIGHT = self.col * SIZE, self.row * SIZE
         self.w = WIDTH
@@ -31,9 +40,29 @@ class TerritoryGameEnvironment:
         self.playerTile.setInitialStandingTileColor(self.tiles)
         # self.tiles[initial_y][initial_x].setColor(self.player_color)
 
+        self.other_players = []
+        self.entities = []
 
-        if trajectoryTrackingMode:
-            pass
+        self.trajectory_length = 0
+        if self.trajectoryTrackingFileName:
+            print("Trajectory Tracking Mode: Press Enter or Right arrow key to proceed")
+            trajectory_data = trajectory_data[1:]
+
+            for bot_traj_data in trajectory_data:
+                botX, botY = bot_traj_data[0], bot_traj_data[1]
+                botColor = bot_traj_data[2]
+                botTraj = bot_traj_data[3]
+
+                bot = Bot(botX, botY, botColor)
+                bot.setInitialStandingTileColor(self.tiles)  # set the initial standing tile color
+
+                self.trajectory_length = len(botTraj) # 한번만 세팅해주면 되는데 여러번 세팅하고있음 (많아야 봇 개수만큼, 어차피 다 같을것)
+
+                bot.load_trajectory(botTraj)
+                self.other_players.append(bot)
+
+            self.entities = self.other_players # same as other players list
+
         else:
             # initialize bot players
             bot_colors = Tile.available_colors.copy()
@@ -42,24 +71,30 @@ class TerritoryGameEnvironment:
             num_other_players = min(3,num_other_players) # maximum of 3 enemy player
             if num_other_players == 0: # add a spiral if 0 players are given
                 num_other_players = 1
-                bot_infos = [('spiral', False)]
+                bot_infos = [('spiral')]
             start_locations = ((self.col-2, self.row-2), (self.col-2, 1), (1, self.row-2 ))
 
             self.other_players = [] # assign position and algorithms they use / randomly assign color
             for i in range(num_other_players):
-                algo,traceMode = bot_infos[i]
+                algo = bot_infos[i]
                 x_bot,y_bot,color_bot = start_locations[i][0],start_locations[i][1], bot_colors[i]
                 bot = None
                 if algo == 'spiral':
                     bot = SpiralBot(x_bot, y_bot, color_bot)
                 else: # random bot
                     bot = Bot(x_bot, y_bot, color_bot)
-                bot.setTraceMode(traceMode)
                 bot.setInitialStandingTileColor(self.tiles) # set the initial standing tile color
                 self.other_players.append(bot)
 
             self.entities = [e for e in self.other_players] + [self.playerTile]
-            self.all_tile_sprites_list.add(*self.entities)
+
+            # additional mode check - just set bit
+            if self.trajectorySaveFileName:
+                print("Trajectory save mode: Trajectory right before the 'reset' will be saved")
+                for botE in self.entities:
+                    botE.setTraceMode(True)
+
+        self.all_tile_sprites_list.add(*self.entities)
 
         self.frame_iteration = 0
         self.max_idle_tolerance = self.total_num_tiles//4  #maximum steps without any obtaining new region
@@ -69,32 +104,27 @@ class TerritoryGameEnvironment:
         self.font_for_winner_message = pygame.font.SysFont('arial', 50, True)
         self.x_winner_message, self.y_winner_message = self.w // 2 - 150, self.h // 2 - 50
 
-
         # for trajectory setting (can only store one trajectory to execute)
-        self.trajectory = deque([])
+        # 이 두 값은 모든 봇이 동일하게 움직임
         self.trajectory_index = 0
-        self.trajectory_length = 0
 
-    def setTrajectory(self, initial_pos, trajectory):
-        self.trajectory_length = len(trajectory)
-        self.trajectory = deque(trajectory)
-
-        # pick only one bot to move
-        trajectory_bot = SpiralBot(initial_pos[0], initial_pos[1], 'purple' )
-        trajectory_bot.setInitialStandingTileColor(self.tiles)  # set the initial standing tile color
-
-        # reset: remove all entities and draw these instead
-        self.other_players = [trajectory_bot]
-        self.entities = [trajectory_bot]
-
-        self.all_tile_sprites_list.add(*self.entities)
+    def resetTrajectoryTracking(self):
+        pass
 
     def reset(self):
         for tile in self.flat_tile_sprites:
             tile.reset()
 
+        # save trajectory mode 처리
+
+        # initialize trajectory file that will be saved
+        if self.trajectorySaveFileName:
+            init_trajectory_data(self.trajectorySaveFileName, self.mapName) # we use append mode for writtng, so we initialize it with write mode writting empty string
+
         for e in self.entities:
             e.reset(self.tiles)
+            if self.trajectorySaveFileName:
+                e.write_and_reset_trace(self.trajectorySaveFileName)
 
         self.frame_iteration = 0
 
@@ -203,34 +233,37 @@ class TerritoryGameEnvironment:
         self._update_ui_ending()
         self.clock.tick(FPS)
 
+    def reset_trajectory_directions(self):
+        for botE in self.entities:
+            botE.reset_trajectory_direction()
+
     def proceed_trajectory(self):
-        if self.trajectory_index < self.trajectory_length:
-            this_direction = Direction(self.trajectory[self.trajectory_index])
+        self.reset_trajectory_directions()
+        if self.trajectory_index < self.trajectory_length: # not reached end
+            for botE in self.entities:
+                botE.set_forward_trajectory_direction(self.trajectory_index)
+
             self.trajectory_index += 1  # set next direction index to execute
-            return this_direction
-        else:  # reached end
-            return None
 
     def revert_trajectory(self):
-        if self.trajectory_index > 0:
-            self.trajectory_index -= 1
-            return get_reverse_direction(Direction(self.trajectory[self.trajectory_index]))  # reverse of the previous move
-        else:# reached start
-            return None
+        self.reset_trajectory_directions()
+        if self.trajectory_index > 0:  # not reached start
+            self.trajectory_index -= 1 # decrement first
+
+            for botE in self.entities:
+                botE.set_reverse_trajectory_direction(self.trajectory_index)
+
 
     def simulate_trajectory(self):
         execute_trajectory = False
-        this_direction = None
-        is_revert = False
         # for faster trajectory
         keys = pygame.key.get_pressed()  # 꾹 누르고 있으면 계속 실행되는 것들
         if keys[pygame.K_RETURN]:
             execute_trajectory = True
-            this_direction = self.proceed_trajectory()
+            self.proceed_trajectory()
         if keys[pygame.K_BACKSPACE]:
-            is_revert = True
             execute_trajectory = True
-            this_direction = self.revert_trajectory()
+            self.revert_trajectory()
 
         # for faster trajectory
         for event in pygame.event.get():
@@ -240,11 +273,10 @@ class TerritoryGameEnvironment:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN or event.key == pygame.K_RIGHT: # proceed traj
                     execute_trajectory = True
-                    this_direction = self.proceed_trajectory()
+                    self.proceed_trajectory()
                 elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_LEFT: # GO BACK TRAJECTORY
                     execute_trajectory = True
-                    is_revert = True
-                    this_direction = self.revert_trajectory()
+                    self.revert_trajectory()
 
         game_over = False
         # if :
@@ -252,17 +284,16 @@ class TerritoryGameEnvironment:
         #     return game_over, 0
 
         ## 아직 revert 했을때 region occupy한거 되돌리는거는 안함. enclosure를 되돌려야 하는 문제가 있다 ㅠㅠ
-
-        if execute_trajectory and this_direction:
+        if execute_trajectory:
             # move w.r.t trajectory
-            for botE in self.other_players:
-                botE.setDirection(this_direction)
-                botE.enforceTarget(self.row, self.col, self.tiles)
-                botE.move()
-                botE.detect_possible_Enclosure(self.tiles)
-                if is_revert: # revert occupied land... 해당 이동이 occupy하는 이동인지, 원래 내 타일을 이동한거였는지, enclosure했다면 해당 region에 대한 정보 받아와야 함... trajectory진행하면서
-                    # keep track of occupition region / tile that happened in each step, and revert (set color white)
-                    pass
+            for botE in self.entities:
+                this_direction = botE.get_trajectory_direction()
+                if this_direction:
+                    botE.setDirection(this_direction)
+                    botE.enforceTarget(self.row, self.col, self.tiles)
+                    botE.move()
+                    botE.detect_possible_Enclosure(self.tiles)
+
 
         # update with respect to trajectory given
         self._update_ui()

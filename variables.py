@@ -15,12 +15,11 @@ False 로 해뒀는지 체크!
 @dataclass
 class BotInfo:
     type: str = 'bot'
-    setTrace: bool = False
     x: int = -1
     y: int = -1
 
-TileMapName = 'blank 20 20'
-BotList = [('bot', True)] #[('bot', False),('bot', False),('spiral', False) ] #[('spiral', False)]  #
+TileMapName = 'box 20 20'
+BotList = [('bot'),('spiral')] #[('bot'),('bot'),('spiral') ] #[('spiral')]  #
 
 #############################################
 

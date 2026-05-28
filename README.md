@@ -53,7 +53,8 @@ contains global variables
 ## Version history
 2026.05.27 Initial commit               
 2026.05.28 Git Reset             
-Added trajectory simulation
+- Added trajectory simulation (no reversing)       
+- Enclosure bug fixed 
 
 
 
