@@ -9,7 +9,8 @@ This project is based on python. Below are the packages that needs to be install
 
 pygame
 matplotlib
-scipy
+numpy
+pytorch
 
 
 ## Sample run
@@ -32,12 +33,14 @@ Agent model NN
 Environment for learning
 - human_playable.py      
 Interactable game (without AI)
+- trajectory_simulation.py
+Execute trajectory saved as txt file
 - enclosureProblem.py      
 Enclosing algorithm
 - container.py      
 Image, Text class
 - gui.py      
-GUI
+GUI (UNUSED)
 - plotting.py      
 for plotting graph
 - tileDataIO.py      
@@ -47,8 +50,10 @@ contains global variables
 
 
 
-
-
+## Version history
+2026.05.27 Initial commit               
+2026.05.28 Git Reset             
+Added trajectory simulation
 
 
 
