@@ -72,8 +72,11 @@ class TerritoryGameEnvironment:
 
         # for trajectory setting (can only store one trajectory to execute)
         self.trajectory = deque([])
+        self.trajectory_index = 0
+        self.trajectory_length = 0
 
     def setTrajectory(self, initial_pos, trajectory):
+        self.trajectory_length = len(trajectory)
         self.trajectory = deque(trajectory)
 
         # pick only one bot to move
@@ -200,31 +203,66 @@ class TerritoryGameEnvironment:
         self._update_ui_ending()
         self.clock.tick(FPS)
 
+    def proceed_trajectory(self):
+        if self.trajectory_index < self.trajectory_length:
+            this_direction = Direction(self.trajectory[self.trajectory_index])
+            self.trajectory_index += 1  # set next direction index to execute
+            return this_direction
+        else:  # reached end
+            return None
+
+    def revert_trajectory(self):
+        if self.trajectory_index > 0:
+            self.trajectory_index -= 1
+            return get_reverse_direction(Direction(self.trajectory[self.trajectory_index]))  # reverse of the previous move
+        else:# reached start
+            return None
+
     def simulate_trajectory(self):
-        proceed_flag = False
+        execute_trajectory = False
+        this_direction = None
+        is_revert = False
+        # for faster trajectory
+        keys = pygame.key.get_pressed()  # 꾹 누르고 있으면 계속 실행되는 것들
+        if keys[pygame.K_RETURN]:
+            execute_trajectory = True
+            this_direction = self.proceed_trajectory()
+        if keys[pygame.K_BACKSPACE]:
+            is_revert = True
+            execute_trajectory = True
+            this_direction = self.revert_trajectory()
+
+        # for faster trajectory
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    # proceed traj
-                    proceed_flag = True
+                if event.key == pygame.K_RETURN or event.key == pygame.K_RIGHT: # proceed traj
+                    execute_trajectory = True
+                    this_direction = self.proceed_trajectory()
+                elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_LEFT: # GO BACK TRAJECTORY
+                    execute_trajectory = True
+                    is_revert = True
+                    this_direction = self.revert_trajectory()
 
         game_over = False
-        if not self.trajectory:
-            game_over = True
-            return game_over, 0
+        # if :
+        #     game_over = True
+        #     return game_over, 0
 
-        if proceed_flag:
+        ## 아직 revert 했을때 region occupy한거 되돌리는거는 안함. enclosure를 되돌려야 하는 문제가 있다 ㅠㅠ
+
+        if execute_trajectory and this_direction:
             # move w.r.t trajectory
             for botE in self.other_players:
-                this_direction = Direction(self.trajectory.popleft()) # this is int -> convert to direction
-                # print(self.trajectory)
                 botE.setDirection(this_direction)
                 botE.enforceTarget(self.row, self.col, self.tiles)
                 botE.move()
                 botE.detect_possible_Enclosure(self.tiles)
+                if is_revert: # revert occupied land... 해당 이동이 occupy하는 이동인지, 원래 내 타일을 이동한거였는지, enclosure했다면 해당 region에 대한 정보 받아와야 함... trajectory진행하면서
+                    # keep track of occupition region / tile that happened in each step, and revert (set color white)
+                    pass
 
         # update with respect to trajectory given
         self._update_ui()

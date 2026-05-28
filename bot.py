@@ -185,23 +185,22 @@ class Bot(Tile):
         # for forward check
         xForward, yForward = xNext + dx, yNext + dy
 
-        # right diagonal corner - including wall tile is fine 닿여도 되는 부분 리스트임
-        if (0 <= xDiag1 < col) and (0 <= yDiag1 < row) and (tiles[yDiag1][xDiag1].getColor() == self.color or tiles[yDiag1][xDiag1].is_wall()):
+        # 찾음. 이거 하나라도 해당되면 다 해야하는거임 ㅋㅋㅋㅋ
+
+        # right, left diagonal corner and front - including wall tile is fine 닿여도 되는 부분 리스트임
+        if (   (0 <= xDiag1 < col) and (0 <= yDiag1 < row) and (tiles[yDiag1][xDiag1].getColor() == self.color or tiles[yDiag1][xDiag1].is_wall())   ) or  (    (0 <= xDiag2 < col) and (0 <= yDiag2 < row) and (tiles[yDiag2][xDiag2].getColor() == self.color or tiles[yDiag2][xDiag2].is_wall())    ) or (    (0 <= xForward < col) and (0 <= yForward < row) and (tiles[yForward][xForward].getColor() == self.color or tiles[yForward][xForward].is_wall())    ):
             # tiles[yDiag1][xDiag1].turn_highlight_red()
             self.call_propagate(tiles,row,col, (self.x + dx1, self.y + dy1))
-        # left diagonal corner - including wall tile is fine 닿여도 되는 부분 리스트임
-        if (0 <= xDiag2 < col) and (0 <= yDiag2 < row) and (tiles[yDiag2][xDiag2].getColor() == self.color or tiles[yDiag2][xDiag2].is_wall()):
             # tiles[yDiag2][xDiag2].turn_highlight_red()
-            self.call_propagate(tiles,row,col, (self.x + dx2, self.y + dy2))
-        if (0 <= xForward < col) and (0 <= yForward < row) and (tiles[yForward][xForward].getColor() == self.color or tiles[yForward][xForward].is_wall()):
+            self.call_propagate(tiles, row, col, (self.x + dx2, self.y + dy2))
             # tiles[yForward][xForward].turn_highlight_red()
-            self.call_propagate(tiles,row,col, (self.x + dx, self.y + dy))
+            self.call_propagate(tiles, row, col, (self.x + dx, self.y + dy))
 
     # HELPER: if given position is empty block, call propagate
     def call_propagate(self,tiles,row,col,pos):
         if (0 <= pos[0] < col) and (0 <= pos[1] < row) and tiles[pos[1]][pos[0]].getColor() == 'white':
             self.propagate(tiles, pos)
-            # tiles[pos[1]][pos[0]].turn_highlight_red()
+            tiles[pos[1]][pos[0]].turn_highlight_red()
 
     # HELPER: propagate empty tile region and check it is surrounded by my color
     def propagate(self, tiles, seed):

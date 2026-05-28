@@ -1,7 +1,15 @@
 from enum import Enum
 from dataclasses import dataclass
 from typing import Any
+'''
+### 실행하기 전에 체크할것:
 
+trajectory 기록하기 모드를 꺼둬야 빠르다
+BotList = [('bot', False)]
+False 로 해뒀는지 체크!
+
+
+'''
 
 ######## Simulation configuration ##########
 @dataclass
@@ -64,6 +72,13 @@ def get_right_orthogonal_directions(direction):
     new_dir1 = clock_wise[next_idx1]  # r -> d -> l -> u -> r
 
     return new_dir1
+
+def get_reverse_direction(direction):
+    idx = clock_wise.index(direction)  # get the index of current direction
+    reverse_idx = (idx + 2) % 4
+    reverse_dir = clock_wise[reverse_idx]  # r -> d -> l -> u -> r
+
+    return reverse_dir
 
 def delta_given_direction(direction):
     dx,dy = 0,0
