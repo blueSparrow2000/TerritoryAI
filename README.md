@@ -53,8 +53,13 @@ contains global variables
 ## Version history
 2026.05.27 Initial commit               
 2026.05.28 Git Reset             
-- Added trajectory simulation (no reversing)       
+- Added trajectory simulation (Enter to forward, Backspace to reverse - step by step using Right/Left arrow keys)      
 - Enclosure bug fixed 
+- dataclass for efficient management
 
+
+### TODO
+- model parameter loading (inference step or learning continously)
+- human be able to play with learned model (only inference step)
 
 

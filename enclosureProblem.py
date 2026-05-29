@@ -9,23 +9,18 @@ given
 check whether a region is enclosed or not
 if enclosed, change all block color in the area as given color
 
-
 https://stackoverflow.com/questions/10856634/pygame-blitting-only-updated-surfaces
 
 https://devnauts.tistory.com/63
 
 
 이제 가뒀을때 영역 먹히는게 구현이 됨
-TODO:
+
 1) 랜덤 움직임 및 갈 수 있는곳 찾는 길찾기 코드 (dumb ai) agent 만들기
 2) territoryAI 시뮬레이터 만들어서 돌릴 수 있게 만들기 (보상 등)
 3) clockwise sweep 같은 유명한 알고리즘 agent도 구현해두기
----- 여기까지만 ----
 4) 강화학습 돌릴 수 있게 input output 정의: 현재 상황인 tile map 상황을 줘서 학습? (2D array를 통째로 줄까) / output은 상하좌우 방향 원핫 벡터
 5) 모델 파라미터 저장해두고 불러오기 기능 찾고 구현 (ai 써서 기능 구현해도 될듯)
-6) 작은 공간에서 실제로 학습 시켜보기
-
-
 '''
 
 import pygame

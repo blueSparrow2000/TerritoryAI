@@ -27,14 +27,13 @@ output 처리
 0) 이동할 수 있고, 포인트 안주는 my tile
 -1) 이동할 수 없는 상대 tile 또는 벽
 
-이런 상태정보를 주기... 흠 
-아니면 각 상태 채널을 3개씩 만들어서 넣어줘야 하나...
-생각해보니 방향정보는 필요없음 바로바로 바꿀 수 있음
+* 보상이 문제인가? 빈칸으로 이동하기만 하면 +1 주고, 내 타일이나 아무곳도 이동안되면 +0 (벽이나 상대에게 막히는 등)
+previous action정보를 주는게 맞는듯 하다
+[ up down left right ]
+해서 previous action이 각 방향중 어느 방향이었는지를 주기 
+(첫 방향은 기본적으로 RIGHT로 가게 설정되어있어서, 처음 움직임 direction은 리플레이 버퍼에서 제거해야 할듯... 아닌가 모든 주변타일 공백인 채로 시작하면 오른쪽으로 가게하는거라.. 괜찮나)
 
-즉 8개의 nearby window에서 
-각각 타일 종류별로 다 나타내볼까? 
-벽이랑 적 타일이랑 구분하길 원하면 그것도 따로 해줘야 할듯... enclosure를 효율적으로 만드는거에 필요함. 
-벽이랑 내 타일이랑도 다르긴 함. 내 타일은 지나가도 벽은 못지나감
+
 
 '''
 class Agent:
@@ -56,6 +55,10 @@ class Agent:
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, game):
+
+        # 개선점 : 과거의 액션을 인풋으로 줌
+        # 과거의 연속된 액션을 인풋으로 주면 좀 더 메모리 ? 히스토리에 대한 인풋을 얻는거니까 
+        # 과거의 액션 개수를 1개 -> 2개씩 줘보고 어떻게 될지 테스트 ㄱㄱ
         # get states from nearby observation
         nearby_info = []
 
@@ -131,9 +134,15 @@ class Agent:
 
 def train():
     global TileMapName, BotList
+    # plot helper: for keeping recent 10 scores
+    last_N_games = 10
+    oldest_index = 0
+    last_N_scores = []
+
+    # points for plotting
     plot_scores = []
-    plot_mean_scores = deque([])
-    total_score = 0
+    plot_mean_scores = [] # mean of last 10 scores will be appended here
+
     record = 0
     agent = Agent()
     # trace mode
@@ -165,13 +174,23 @@ def train():
 
             if score > record:
                 record = score
-                agent.model.save()
+                agent.model.save() # 기록 갱신하는 모델 파라미터는 저장됨
 
             print('Game', agent.n_games, 'Score', score, 'Record:', record)
 
-            plot_scores.append(score)
-            total_score += score
-            mean_score = total_score / agent.n_games
+            mean_score = 0
+            if len(last_N_scores) < last_N_games:
+                last_N_scores.append(score)
+                mean_score = sum(last_N_scores) / len(last_N_scores)
+            else:
+                last_N_scores[oldest_index] = score
+                oldest_index = (oldest_index+1)%last_N_games
+                mean_score = sum(last_N_scores) / last_N_games
+
+            # last_N_scores += score
+            # mean_score = last_N_scores / agent.n_games
+
+            plot_scores.append(score)  # plot each score points at each iteration
             plot_mean_scores.append(mean_score)
             plot(plot_scores, plot_mean_scores)
 

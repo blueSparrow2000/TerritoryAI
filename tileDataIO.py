@@ -16,6 +16,28 @@ def read_tile_map(fileName):
     APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/tileMaps/'
     full_path = os.path.join(APP_FOLDER, '{}.txt'.format(fileName))
     tiles = []
+
+    # check generic map names ; such as 'blank' will make general col x row space
+    abort = False
+    try:
+        # print("generic map: ", fileName)
+        mapName, col, row = fileName.split(' ')
+        col,row = int(col),int(row)
+        if col < 4 or row < 4:
+            abort = True
+            raise Exception("row, col must be at least 4")
+
+        if mapName == 'blank':
+            tiles = [['w' for _ in range(col)] for _ in range(row)]
+            return tiles
+
+    except Exception as e:
+        print('[Error reading file named: %s]\n[!]'%fileName, e)
+
+
+    if abort: # map name was generic, but improper parameter input
+        sys.exit(0)
+
     # instantiate each text into tiles
     with open(full_path, "r") as f:
         lines = [line.strip() for line in f.readlines()] # each lines
@@ -74,7 +96,14 @@ def printMat(tiles):
         print(info)
 
 
-
+# def printMat(data):
+#     xlen = len(data[0])
+#     for y in range(len(data)):
+#         info = ''
+#         for x in range(xlen):
+#             info += str(data[y][x]) + ' '
+#
+#         print(info)
 
 
 

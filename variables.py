@@ -2,13 +2,8 @@ from enum import Enum
 from dataclasses import dataclass
 from typing import Any
 '''
-### 실행하기 전에 체크할것:
-
+### 실행하기 전에 체크할 것:
 trajectory 기록하기 모드를 꺼둬야 빠르다
-BotList = [('bot', False)]
-False 로 해뒀는지 체크!
-
-
 '''
 
 ######## Simulation configuration ##########
@@ -18,8 +13,8 @@ class BotInfo:
     x: int = -1
     y: int = -1
 
-TileMapName = 'box 20 20'
-BotList = [('bot'),('spiral')] #[('bot'),('bot'),('spiral') ] #[('spiral')]  #
+TileMapName = 'blank 20 20' #'blank 20 20'
+BotList = [('bot'),('bot')] #[('bot'),('bot'),('spiral') ] #[('spiral')]  #
 
 #############################################
 
@@ -90,13 +85,3 @@ def delta_given_direction(direction):
     elif direction == Direction.UP:
         dy -= 1
     return dx,dy
-
-# for dir in clock_wise:
-#     print(dir)
-#     or1, or2 = get_orthogonal_directions(dir)
-#     print(or1)
-#     print(delta_given_direction(or1))
-#     print()
-#     print(or2)
-#     print(delta_given_direction(or2))
-#     print("*"*10)

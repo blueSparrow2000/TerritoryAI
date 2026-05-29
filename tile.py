@@ -151,6 +151,9 @@ class Tile(pygame.sprite.Sprite):
     '''
     # Factory method
     Read tilemap text data and make it into 2D array
+    
+    tileData: 2D array 
+    [ ['w', 'w', ... ] ['w', 'w', ... ] ... ]
     '''
     @classmethod
     def generate_tile_map(cls, tileData):

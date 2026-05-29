@@ -17,6 +17,7 @@ class TerritoryGameEnvironment:
 
         # UNCHANGED: initialize tile board and display setting
         tileMapData = read_tile_map(self.mapName)
+
         self.col, self.row = len(tileMapData[0]), len(tileMapData)
         WIDTH, HEIGHT = self.col * SIZE, self.row * SIZE
         self.w = WIDTH
@@ -97,7 +98,7 @@ class TerritoryGameEnvironment:
         self.all_tile_sprites_list.add(*self.entities)
 
         self.frame_iteration = 0
-        self.max_idle_tolerance = self.total_num_tiles//4  #maximum steps without any obtaining new region
+        self.max_idle_tolerance = self.row+self.col  #maximum steps without any obtaining new region
 
         # some text setting
         self.font_for_score = pygame.font.SysFont('arial', 20)

@@ -6,6 +6,7 @@ if __name__ == '__main__':
     global TileMapName, BotList
     # trajectory save mode : trajectorySaveFileName = "trace" 이거 None으로 바꿔줘야 trace없는 더 빠른 모드임
     # game = TerritoryGameEnvironment(trajectorySaveFileName = "trace", mapName = TileMapName, bot_infos = BotList)
+
     # without trajectory save
     game = TerritoryGameEnvironment( mapName=TileMapName, bot_infos=BotList)
     # game loop
