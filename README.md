@@ -44,6 +44,22 @@ For both case, player and agents are 'black' colored, and other colors are bots
 
 - maze (TBU)
 
+### maps
+- blank (10 x 12)
+
+<img src="./sample_run/map_blank_10_12.png" width="100" align="center">
+
+- box (20 x 20)
+
+<img src="./sample_run/map_box_20_20.png" width="200" align="center">
+
+- circle (radius 10)
+
+<img src="./sample_run/map_circle_10.png" width="200" align="center">
+
+
+- maze (TBU)
+
 
 ## Files
 - tile.py      
