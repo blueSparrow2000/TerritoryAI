@@ -5,7 +5,7 @@ import time
 pygame.init()
 
 class TerritoryGameEnvironment:
-    def __init__(self, initial_x=1, initial_y=1, trajectorySaveFileName = None,trajectoryTrackingFileName = None, mapName = 'blank 10 12', bot_infos = [('bot'),('spiral'),('spiral') ]):
+    def __init__(self, trajectorySaveFileName = None,trajectoryTrackingFileName = None, mapName = 'blank 10 12', bot_infos = (BotInfo('spiral'),)):
         self.trajectorySaveFileName = trajectorySaveFileName
         self.trajectoryTrackingFileName = trajectoryTrackingFileName
 
@@ -34,12 +34,20 @@ class TerritoryGameEnvironment:
         self.flat_tile_sprites = [j for sub in self.tiles for j in sub]
         self.all_tile_sprites_list.add(*self.flat_tile_sprites)
 
+        # if circle, start_locations = ((self.col-8, self.row-8), (self.col-8, 6), (6, self.row-8 ))
+        wall_dist = 1
+        if mapName.startswith('circle'):
+            _, radius = mapName.split(' ')
+            radius = int(radius)
+            wall_dist = radius//2 - 1
+        start_locations = ((wall_dist,wall_dist), (self.col - (wall_dist+1), self.row - (wall_dist+1)), (self.col - (wall_dist+1), wall_dist), (wall_dist, self.row - (wall_dist+1)))
+
         # init game state - player
         self.player_color = 'dark'  # player color
-        self.playerTile = Bot(initial_x, initial_y, self.player_color)
+        player_location = start_locations[0]
+        self.playerTile = Bot(player_location[0], player_location[1], self.player_color)
         # set player standing initial tile color
         self.playerTile.setInitialStandingTileColor(self.tiles)
-        # self.tiles[initial_y][initial_x].setColor(self.player_color)
 
         self.other_players = []
         self.entities = []
@@ -72,15 +80,23 @@ class TerritoryGameEnvironment:
             num_other_players = min(3,num_other_players) # maximum of 3 enemy player
             if num_other_players == 0: # add a spiral if 0 players are given
                 num_other_players = 1
-                bot_infos = [('spiral')]
-            start_locations = ((self.col-2, self.row-2), (self.col-2, 1), (1, self.row-2 ))
+                bot_infos = (BotInfo('spiral'),)
+
+
 
             self.other_players = [] # assign position and algorithms they use / randomly assign color
             for i in range(num_other_players):
-                algo = bot_infos[i]
-                x_bot,y_bot,color_bot = start_locations[i][0],start_locations[i][1], bot_colors[i]
+                this_bot_info = bot_infos[i]
+
+                if this_bot_info.custom_coord: bot_start_location = this_bot_info.custom_coord
+                else: bot_start_location = start_locations[i+1]
+                if this_bot_info.color: this_bot_color = this_bot_info.color
+                else: this_bot_color = bot_colors[i]
+
+                x_bot,y_bot,color_bot = bot_start_location[0],bot_start_location[1], this_bot_color
+
                 bot = None
-                if algo == 'spiral':
+                if this_bot_info.type == 'spiral':
                     bot = SpiralBot(x_bot, y_bot, color_bot)
                 else: # random bot
                     bot = Bot(x_bot, y_bot, color_bot)
@@ -109,8 +125,6 @@ class TerritoryGameEnvironment:
         # 이 두 값은 모든 봇이 동일하게 움직임
         self.trajectory_index = 0
 
-    def resetTrajectoryTracking(self):
-        pass
 
     def reset(self):
         for tile in self.flat_tile_sprites:
@@ -143,7 +157,9 @@ class TerritoryGameEnvironment:
             botE.move()
             botE.detect_possible_Enclosure(self.tiles)
 
-
+    '''
+    Train agent loop
+    '''
     def play_step(self,action):
         self.frame_iteration += 1
         # 1. collect user input
@@ -175,7 +191,7 @@ class TerritoryGameEnvironment:
 
         # 3. update ui and clock
         self._update_ui()
-        self.clock.tick(FPS)
+        self.clock.tick(TRAINFPS)
 
         # 4. check if over (all tiles are occupied)
         game_over = False
@@ -223,7 +239,7 @@ class TerritoryGameEnvironment:
         return game_over, self.playerTile.getScore()
 
     '''
-    Only draw sprites
+    Only draw sprites (at the end of human play game)
     '''
     def idle(self):
         for event in pygame.event.get():
@@ -234,6 +250,9 @@ class TerritoryGameEnvironment:
         self._update_ui_ending()
         self.clock.tick(FPS)
 
+    '''
+    Trajectory
+    '''
     def reset_trajectory_directions(self):
         for botE in self.entities:
             botE.reset_trajectory_direction()
@@ -310,16 +329,6 @@ class TerritoryGameEnvironment:
 
         return game_over, 0
 
-    def get_score_sum(self):
-        score_sum = 0
-        for botE in self.entities:
-            score_sum += botE.getScore()
-        # print(score_sum)
-        return score_sum
-
-    def allTilesOccupied(self):
-        return self.get_score_sum() == self.total_num_tiles
-
     def _update_ui(self):
         # draw the head of the tile last -> so that it is on top
 
@@ -345,6 +354,19 @@ class TerritoryGameEnvironment:
         self.display.blit(text, [self.x_winner_message, self.y_winner_message])
 
         pygame.display.flip()
+
+    '''
+    score 
+    '''
+    def get_score_sum(self):
+        score_sum = 0
+        for botE in self.entities:
+            score_sum += botE.getScore()
+        # print(score_sum)
+        return score_sum
+
+    def allTilesOccupied(self):
+        return self.get_score_sum() == self.total_num_tiles
 
     def sort_score(self):
         self.entities.sort(key = lambda e:-e.getScore())

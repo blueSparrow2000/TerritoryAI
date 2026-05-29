@@ -1,33 +1,27 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Any
-'''
-### 실행하기 전에 체크할 것:
-trajectory 기록하기 모드를 꺼둬야 빠르다
-'''
 
-######## Simulation configuration ##########
 @dataclass
 class BotInfo:
     type: str = 'bot'
-    x: int = -1
-    y: int = -1
+    color: str = None
+    custom_coord: tuple[int,int] = None
 
-TileMapName = 'blank 20 20' #'blank 20 20'
-BotList = [('bot'),('bot')] #[('bot'),('bot'),('spiral') ] #[('spiral')]  #
-
+######## Simulation configuration ##########
+TileMapName = 'circle 15' #'blank 20 20'
+BotList = (  BotInfo('bot'), BotInfo('spiral'), BotInfo('bot') )
+#  (  BotInfo('spiral'), BotInfo('spiral'), BotInfo('spiral') )
+#(  BotInfo('bot'),  BotInfo('spiral', 'red',custom_coord= (6,6)), )
 #############################################
 
-
-SIZE = 20 # block pixel size
-HALFSIZE = SIZE//2
-
-FPS = 20 # 60 for training
-SLOWFPS = 30
-ANIMFPS = 20
+FPS = 20 # 1: super slow , 5~10: human friendly, 20~: agent training purpose
+TRAINFPS = 30 # 60 for training
 
 ENDING_DELAY_SECONDS = 2
 
+# block pixel size
+SIZE = 20
+HALFSIZE = SIZE//2
 
 # rgb colors
 WHITE = (255, 255, 255)

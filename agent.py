@@ -11,6 +11,10 @@ from tile import Tile
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
+'''
+### 실행하기 전에 체크할 것:
+trajectory 기록하기 모드를 꺼둬야 빠르다
+'''
 
 '''
 AGENT
@@ -33,8 +37,9 @@ previous action정보를 주는게 맞는듯 하다
 해서 previous action이 각 방향중 어느 방향이었는지를 주기 
 (첫 방향은 기본적으로 RIGHT로 가게 설정되어있어서, 처음 움직임 direction은 리플레이 버퍼에서 제거해야 할듯... 아닌가 모든 주변타일 공백인 채로 시작하면 오른쪽으로 가게하는거라.. 괜찮나)
 
+-> 과거 방향을 인풋으로 주는건 별로인듯. 직전의 방향전환한 방향 이런 정보 아니면 딱히. snake 처럼 움직여야
 
-
+그거보단 CNN 같은 locality줄 수 있는 구조로 NN 바꿔야 할듯
 '''
 class Agent:
     # window input 들어가는 순서 = 시계방향으로, 위 방향부터

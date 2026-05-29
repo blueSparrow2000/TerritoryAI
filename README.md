@@ -2,6 +2,7 @@
 A python implementation of territory war for Reinforcement Learning
 
 
+change the variables in 'variables.py' to try out different tilemaps & bots
 
 
 ## Installations
@@ -12,12 +13,36 @@ matplotlib
 numpy
 pytorch
 
+## Run
+Run 'agent.py' to train RL agent
+
+Run 'human_playable.py' to play yourself 
+
+Use Arrow keys to move to each direction
+
+For both case, player and agents are 'black' colored, and other colors are bots
+
 
 ## Sample run
 - Main  menu       
 
-[//]: # (<img src="./sample_run/main.png" width="300" height="300" align="center">  )
+<img src="./sample_run/sample_run.png" width="300" align="center">
 
+### maps
+- blank (10 x 12)
+
+<img src="./sample_run/map_blank_10_12.png" width="100" align="center">
+
+- box (20 x 20)
+
+<img src="./sample_run/map_box_20_20.png" width="200" align="center">
+
+- circle (radius 10)
+
+<img src="./sample_run/map_circle_10.png" width="200" align="center">
+
+
+- maze (TBU)
 
 
 ## Files
@@ -55,11 +80,16 @@ contains global variables
 2026.05.28 Git Reset             
 - Added trajectory simulation (Enter to forward, Backspace to reverse - step by step using Right/Left arrow keys)      
 - Enclosure bug fixed 
-- dataclass for efficient management
+
+2026.05.29 
+- plotting recent 10 scores           
+- blank map and circle maps of any size can be generated!
+- dataclass for better bot list
+
+- model parameter loading (for inference or continued learning)
 
 
 ### TODO
-- model parameter loading (inference step or learning continously)
 - human be able to play with learned model (only inference step)
 
 
