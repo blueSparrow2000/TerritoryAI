@@ -13,7 +13,7 @@ class BotInfo:
     x: int = -1
     y: int = -1
 
-TileMapName = 'blank 20 20' #'blank 20 20'
+TileMapName = 'circle 10' #'blank 20 20'
 BotList = [('bot'),('bot')] #[('bot'),('bot'),('spiral') ] #[('spiral')]  #
 
 #############################################

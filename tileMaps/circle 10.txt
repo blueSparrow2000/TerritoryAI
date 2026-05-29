@@ -1,0 +1,22 @@
+# circle with radius 10
++ + + + + + + + + + + + + + + + + + + + + 
++ + + + + + + w w w w w w w + + + + + + + 
++ + + + + w w w w w w w w w w w + + + + + 
++ + + + w w w w w w w w w w w w w + + + + 
++ + + w w w w w w w w w w w w w w w + + + 
++ + w w w w w w w w w w w w w w w w w + + 
++ + w w w w w w w w w w w w w w w w w + + 
++ w w w w w w w w w w w w w w w w w w w + 
++ w w w w w w w w w w w w w w w w w w w + 
++ w w w w w w w w w w w w w w w w w w w + 
++ w w w w w w w w w w w w w w w w w w w + 
++ w w w w w w w w w w w w w w w w w w w + 
++ w w w w w w w w w w w w w w w w w w w + 
++ w w w w w w w w w w w w w w w w w w w + 
++ + w w w w w w w w w w w w w w w w w + + 
++ + w w w w w w w w w w w w w w w w w + + 
++ + + w w w w w w w w w w w w w w w + + + 
++ + + + w w w w w w w w w w w w w + + + + 
++ + + + + w w w w w w w w w w w + + + + + 
++ + + + + + + w w w w w w w + + + + + + + 
++ + + + + + + + + + + + + + + + + + + + + 

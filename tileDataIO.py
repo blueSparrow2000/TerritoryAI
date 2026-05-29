@@ -1,5 +1,6 @@
 import pygame
 import os, sys
+from pattern_generator import *
 
 def read_all_file_names(folderName):
     folderName += '/'
@@ -15,29 +16,36 @@ Read tilemap text data and make it into 2D array
 def read_tile_map(fileName):
     APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/tileMaps/'
     full_path = os.path.join(APP_FOLDER, '{}.txt'.format(fileName))
-    tiles = []
 
     # check generic map names ; such as 'blank' will make general col x row space
-    abort = False
-    try:
-        # print("generic map: ", fileName)
+    # 1. generic map class of 'name col row'.txt
+    if fileName.startswith('blank'):
         mapName, col, row = fileName.split(' ')
         col,row = int(col),int(row)
         if col < 4 or row < 4:
-            abort = True
-            raise Exception("row, col must be at least 4")
+            print("[Error generating tilemap] Col, Row must be at least 4")
+            sys.exit(0)
 
-        if mapName == 'blank':
-            tiles = [['w' for _ in range(col)] for _ in range(row)]
-            return tiles
+        tiles = [['w' for _ in range(col)] for _ in range(row)]
+        return tiles
 
-    except Exception as e:
-        print('[Error reading file named: %s]\n[!]'%fileName, e)
+    # 2. generic map class of 'circle radius'.txt
+    if fileName.startswith('circle'):
+        # if file exists, read it
+        # generate circle pattern and read
+        mapName, radius = fileName.split(' ')
+        radius = int(radius)
+        if radius < 8:
+            print("[Error generating tilemap] Radius must be at least 8")
+            sys.exit(0)
 
+        tiles = circleTileMapGenerator(radius) #[['w' for _ in range(radius*2+1)] for _ in range(radius*2+1)]
+        return tiles
 
-    if abort: # map name was generic, but improper parameter input
-        sys.exit(0)
+    return generate_tile_map(full_path)
 
+def generate_tile_map(full_path):
+    tiles = []
     # instantiate each text into tiles
     with open(full_path, "r") as f:
         lines = [line.strip() for line in f.readlines()] # each lines
@@ -94,6 +102,14 @@ def printMat(tiles):
             info += tiles[y][x].display_color + ' '
 
         print(info)
+
+
+def write_tile_pattern(patternName, col, row, pattern):
+    APP_FOLDER = os.path.dirname(os.path.realpath(sys.argv[0])) + '/tileMaps/'
+    fileName = '{} {} {}.txt'.format(patternName, col, row)
+    full_path = os.path.join(APP_FOLDER, fileName)
+    with open(full_path, "w") as f:
+        f.write(pattern)
 
 
 # def printMat(data):
