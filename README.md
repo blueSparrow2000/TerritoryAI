@@ -23,6 +23,15 @@ Use Arrow keys to move to each direction
 For both case, player and agents are 'black' colored, and other colors are bots
 
 
+
+To record the trace of the run, set the trajectorySaveFileName = "[trace file name]" parameter in the environment initialization
+
+Then, the most recent run before the game reset will be recorded into [trace file name].txt file in 'trajectoryData' folder(make sure you close the run after reset - for manual reset, press 'R', then exit the pygame)
+
+Run 'trajectory_simulation.py' with trajectoryTrackingFileName = "[trace file name]" parameter set
+
+Press Enter for forward step, Backspace for backward step
+
 ## Sample run
 - Main  menu       
 

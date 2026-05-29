@@ -36,8 +36,8 @@ class TerritoryGameEnvironment:
 
         # if circle, start_locations = ((self.col-8, self.row-8), (self.col-8, 6), (6, self.row-8 ))
         wall_dist = 1
-        if mapName.startswith('circle'):
-            _, radius = mapName.split(' ')
+        if self.mapName.startswith('circle'):
+            _, radius = self.mapName.split(' ')
             radius = int(radius)
             wall_dist = radius//2 - 1
         start_locations = ((wall_dist,wall_dist), (self.col - (wall_dist+1), self.row - (wall_dist+1)), (self.col - (wall_dist+1), wall_dist), (wall_dist, self.row - (wall_dist+1)))

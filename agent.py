@@ -192,9 +192,6 @@ def train():
                 oldest_index = (oldest_index+1)%last_N_games
                 mean_score = sum(last_N_scores) / last_N_games
 
-            # last_N_scores += score
-            # mean_score = last_N_scores / agent.n_games
-
             plot_scores.append(score)  # plot each score points at each iteration
             plot_mean_scores.append(mean_score)
             plot(plot_scores, plot_mean_scores)
