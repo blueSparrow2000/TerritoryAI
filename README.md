@@ -2,7 +2,7 @@
 A python implementation of territory war for Reinforcement Learning
 
 
-change the variables in 'variables.py' to try out different tilemaps & bots
+Change the variables in 'variables.py' to try out different tilemaps & bots
 
 
 ## Installations
