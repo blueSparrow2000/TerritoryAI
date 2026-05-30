@@ -1,6 +1,7 @@
 import torch
 import random
 import numpy as np
+import os
 from variables import *
 from collections import deque
 from environment import TerritoryGameEnvironment
@@ -39,8 +40,13 @@ previous action정보를 주는게 맞는듯 하다
 
 -> 과거 방향을 인풋으로 주는건 별로인듯. 직전의 방향전환한 방향 이런 정보 아니면 딱히. snake 처럼 움직여야
 
-그거보단 CNN 같은 locality줄 수 있는 구조로 NN 바꿔야 할듯
+
+
+[할거] 
+Model check point만들어서 이어서 학습할 수 있도록 만들기\
+https://medium.com/analytics-vidhya/saving-and-loading-your-model-to-resume-training-in-pytorch-cb687352fa61
 '''
+
 class Agent:
     # window input 들어가는 순서 = 시계방향으로, 위 방향부터
     sensing_window = ((0, -1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)) # 8 including diagonal
@@ -49,6 +55,9 @@ class Agent:
     # sensing_distance_3_window = (
     # (0, -1), (0, -2), (1, -1), (1, 0), (2, 0), (1, 1), (0, 1), (0, 2), (-1, 1), (-1, 0), (-2, 0), (-1, -1))
     typeOfRegion = ('white', 'my', 'wall', 'enemy') # used for model input size determining
+
+    agentID = 0
+
     def __init__(self):
         self.n_games = 0
         self.explore_until_step = 120
@@ -59,8 +68,17 @@ class Agent:
         self.model = Linear_QNet(len(self.my_sensing_window)*len(Agent.typeOfRegion), 256, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
-    def get_state(self, game):
+        # used to handle multiple agents
+        self.agentID = Agent.agentID
+        Agent.agentID += 1
 
+    def load_model(self, modelName='model0.pth'): # model0.pth
+        model_folder_path = self.model.get_model_folder_path()
+        file_name = os.path.join(model_folder_path, modelName)
+        self.model.load_state_dict(torch.load(file_name))
+        self.model.eval()
+
+    def get_state(self, game):
         # 개선점 : 과거의 액션을 인풋으로 줌
         # 과거의 연속된 액션을 인풋으로 주면 좀 더 메모리 ? 히스토리에 대한 인풋을 얻는거니까 
         # 과거의 액션 개수를 1개 -> 2개씩 줘보고 어떻게 될지 테스트 ㄱㄱ
@@ -68,7 +86,13 @@ class Agent:
         nearby_info = []
 
         col, row = game.col, game.row
+
+        # 이걸로 pos, color 정보 받아오자
+        # this_agent_tile = game.ai_players[self.agentID]
+
         xCenter,yCenter = game.playerTile.getPos()
+        agent_color = game.playerTile.getColor()
+
 
         # 각 픽셀이 [white인지, 내 땅인지, 벽인지, 적땅인지] 매핑된 정보를 사용
 
@@ -80,7 +104,7 @@ class Agent:
                 this_tile_color = game.tiles[yNear][xNear].getColor()
                 if this_tile_color == 'white': # white (empty)
                     nearby_info.append([1,0,0,0])
-                elif this_tile_color == game.playerTile.getColor(): # my tile
+                elif this_tile_color == agent_color: # my tile
                     nearby_info.append([0,1,0,0])
                 elif Tile.is_wall_color(this_tile_color): # inner wall
                     nearby_info.append([0, 0, 1, 0])

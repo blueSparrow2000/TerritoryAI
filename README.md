@@ -13,6 +13,7 @@ matplotlib
 numpy
 pytorch
 
+
 ## Run
 Run 'agent.py' to train RL agent
 
@@ -53,21 +54,11 @@ Press Enter for forward step, Backspace for backward step
 
 - maze (TBU)
 
-### maps
-- blank (10 x 12)
-
-<img src="./sample_run/map_blank_10_12.png" width="100" align="center">
-
-- box (20 x 20)
-
-<img src="./sample_run/map_box_20_20.png" width="200" align="center">
-
-- circle (radius 10)
-
-<img src="./sample_run/map_circle_10.png" width="200" align="center">
 
 
-- maze (TBU)
+
+### Youtube test link 
+
 
 
 ## Files

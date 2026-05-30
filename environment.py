@@ -42,12 +42,17 @@ class TerritoryGameEnvironment:
             wall_dist = radius//2 - 1
         start_locations = ((wall_dist,wall_dist), (self.col - (wall_dist+1), self.row - (wall_dist+1)), (self.col - (wall_dist+1), wall_dist), (wall_dist, self.row - (wall_dist+1)))
 
-        # init game state - player
+        # init game state - 'human player' OR 'AI player that is train phase only' (these are unique, might not exists on ai vs bot fight)
         self.player_color = 'dark'  # player color
         player_location = start_locations[0]
         self.playerTile = Bot(player_location[0], player_location[1], self.player_color)
         # set player standing initial tile color
         self.playerTile.setInitialStandingTileColor(self.tiles)
+
+
+        # ai players
+        self.ai_players = []
+
 
         self.other_players = []
         self.entities = []
@@ -83,8 +88,6 @@ class TerritoryGameEnvironment:
                 bot_infos = (BotInfo('spiral'),)
 
 
-
-            self.other_players = [] # assign position and algorithms they use / randomly assign color
             for i in range(num_other_players):
                 this_bot_info = bot_infos[i]
 
@@ -151,29 +154,27 @@ class TerritoryGameEnvironment:
             botE.getAction()  # get output from botE
 
         # 2. move
-        self.playerTile.move()  # player move
-        self.playerTile.detect_possible_Enclosure(self.tiles)  # score 합이 120 안되는듯?
-        for botE in self.other_players:  # botE move
-            botE.move()
-            botE.detect_possible_Enclosure(self.tiles)
+        for entity in self.entities:  # botE move
+            entity.move()
+            entity.detect_possible_Enclosure(self.tiles)
 
     '''
     Train agent loop
     '''
     def play_step(self,action):
-        self.frame_iteration += 1
         # 1. collect user input
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
 
-        # get action from AI, which is a direction input
+        self.frame_iteration += 1
         previous_score = self.playerTile.getScore()
         previous_sum_score = self.get_score_sum()
         '''
         We need direction as output, so we only need index (direction)     
         '''
+        # get action from AI, which is a direction input
         action_as_direction_index = action.index(1)
         direction = clock_wise[action_as_direction_index]  # action is defined by clock wise directions
         self.playerTile.setDirection(direction) # player는 타겟을 안정하고, 방향을 먼저 정한다

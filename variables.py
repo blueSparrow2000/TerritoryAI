@@ -9,12 +9,12 @@ class BotInfo:
 
 ######## Simulation configuration ##########
 TileMapName = 'circle 15' #'blank 20 20'
-BotList = (  BotInfo('bot'), BotInfo('spiral'), BotInfo('bot') )
+BotList = (  BotInfo('bot'), BotInfo('spiral'), BotInfo('bot') ) # BotInfo('AI')
 #  (  BotInfo('spiral'), BotInfo('spiral'), BotInfo('spiral') )
 #(  BotInfo('bot'),  BotInfo('spiral', 'red',custom_coord= (6,6)), )
 #############################################
 
-FPS = 20 # 1: super slow , 5~10: human friendly, 20~: agent training purpose
+FPS = 10 # 1: super slow , 5~10: human friendly, 20~: agent training purpose
 TRAINFPS = 30 # 60 for training
 
 ENDING_DELAY_SECONDS = 2
