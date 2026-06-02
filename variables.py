@@ -9,7 +9,7 @@ class BotInfo:
 
 ######## Simulation configuration ##########
 TileMapName = 'blank 20 20' # 'circle 15' #'blank 20 20'
-BotList = (BotInfo('ai'),) # (  BotInfo('ai'),  BotInfo('ai'))  #(  BotInfo('ai'),  BotInfo('ai'))  # BotInfo('ai') #BotInfo('spiral') ,
+BotList = (BotInfo('ai'),)  # (BotInfo('ai'),) # (  BotInfo('ai'),  BotInfo('ai'))  #(  BotInfo('ai'),  BotInfo('ai'))  # BotInfo('ai') #BotInfo('spiral') ,
 #  (  BotInfo('spiral'), BotInfo('spiral'), BotInfo('spiral') )
 #(  BotInfo('bot'),  BotInfo('spiral', 'red',custom_coord= (6,6)), )
 #############################################

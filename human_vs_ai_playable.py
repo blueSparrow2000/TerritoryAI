@@ -10,15 +10,15 @@ if __name__ == '__main__':
 
     # load AI agent - we use same model(agent) for each bots
     agent = Agent()
-    agent.load_model() # put a model name here for specific model
+    agent.load_model('model_window2_against1randomBot_blank2020') # put a model name here for specific model
 
-    game = TerritoryGameEnvironment(mapName=TileMapName, bot_infos=BotList)
+    game = TerritoryGameEnvironment(mapName=TileMapName, bot_infos=BotList)  #no_player = True,
     while True:
         states = [agent.get_state(ai_bot, game.tiles) for ai_bot in game.ai_players]
         moves = [agent.get_action_deterministic(state) for state in states]
 
         # perform move and get new state
-        game_over, score = game.play_step_human_playable(moves)
+        game_over = game.play_step_human_playable(moves)
         if game_over == True:
             game.print_final_scores()
             ######## idle #########

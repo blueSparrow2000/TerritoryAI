@@ -11,7 +11,7 @@ if __name__ == '__main__':
     game = TerritoryGameEnvironment( mapName=TileMapName, bot_infos=BotList)
     # game loop
     while True:
-        game_over, score = game.play_step_human_playable()
+        game_over = game.play_step_human_playable()
         if game_over == True:
             game.print_final_scores()
             ######## idle #########

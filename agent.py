@@ -52,8 +52,7 @@ class Agent:
     sensing_window = ((0, -1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)) # 8 including diagonal
     sensing_distance_1_window = ((0, -1),(1,0),(0,1),(-1,0)) # 4
     sensing_distance_2_window = ((0, -1), (0,-2), (1, -1), (1, 0), (2,0), (1, 1), (0, 1), (0,2), (-1, 1), (-1, 0), (-2,0), (-1, -1)) # 12 depth 2 sensing
-    # sensing_distance_3_window = (
-    # (0, -1), (0, -2), (1, -1), (1, 0), (2, 0), (1, 1), (0, 1), (0, 2), (-1, 1), (-1, 0), (-2, 0), (-1, -1))
+    sensing_distance_3_window = ((0, -1), (0, -2),(0,-3), (1,0), (2,0), (3,0), (0,1), (0,2), (0,3), (-1,0), (-2,0), (-3,0), (1,-1), (1,-2), (2,-1),(1,1),(2,1),(1,2),(-1,1), (-2,1), (-1,2), (-1,-1), (-1,-2), (-2,-1) )
     typeOfRegion = ('white', 'my', 'wall', 'enemy')#('white', 'my', 'wall', 'enemy') # used for model input size determining
 
     agentID = 0
@@ -67,14 +66,15 @@ class Agent:
         self.epsilon = 0  # randomness
         self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
-        self.my_sensing_window = Agent.sensing_distance_1_window
+        self.my_sensing_window = Agent.sensing_distance_2_window
         self.model = Linear_QNet(len(self.my_sensing_window)*len(Agent.typeOfRegion), 256, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
         self.agentID = Agent.agentID
         Agent.agentID += 1
 
-    def load_model(self, modelName='model0.pth'): # model0.pth
+    def load_model(self, modelName='model0'): # model0.pth
+        modelName += '.pth'
         model_folder_path = self.model.get_model_folder_path()
         file_name = os.path.join(model_folder_path, modelName)
         self.model.load_state_dict(torch.load(file_name))
@@ -187,14 +187,14 @@ def train():
     Agent.set_col_row(col,row)
     while True:
         # get old state
-        state_old = agent.get_state(game.controllable_bot, game.tiles)
+        state_old = agent.get_state(game.controllable_bot_list[0], game.tiles)
 
         # get move
         final_move = agent.get_action(state_old)
 
         # perform move and get new state
         reward, done, score = game.play_step(final_move)
-        state_new = agent.get_state(game.controllable_bot, game.tiles)
+        state_new = agent.get_state(game.controllable_bot_list[0], game.tiles)
 
         # train short memory
         agent.train_short_memory(state_old, final_move, reward, state_new, done)

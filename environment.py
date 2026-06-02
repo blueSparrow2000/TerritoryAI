@@ -5,7 +5,7 @@ import time
 pygame.init()
 
 class TerritoryGameEnvironment:
-    def __init__(self, trajectorySaveFileName = None,trajectoryTrackingFileName = None, mapName = 'blank 10 12', bot_infos = (BotInfo('spiral'),)):
+    def __init__(self,no_player = False, trajectorySaveFileName = None,trajectoryTrackingFileName = None, mapName = 'blank 10 12', bot_infos = (BotInfo('spiral'),)):
         self.trajectorySaveFileName = trajectorySaveFileName
         self.trajectoryTrackingFileName = trajectoryTrackingFileName
 
@@ -42,10 +42,14 @@ class TerritoryGameEnvironment:
             wall_dist = radius//2 - 1
         start_locations = ((wall_dist,wall_dist), (self.col - (wall_dist+1), self.row - (wall_dist+1)), (self.col - (wall_dist+1), wall_dist), (wall_dist, self.row - (wall_dist+1)))
 
-        # init game state - 'human player' OR 'AI player that is train phase only' (these are unique, might not exists on ai vs bot fight)
-        self.controllable_bot_color = 'dark'  # player color / training agent color
-        player_location = start_locations[0]
-        self.controllable_bot = Bot(player_location[0], player_location[1], self.controllable_bot_color)
+        bot_colors = Tile.available_colors.copy() # some color
+        self.controllable_bot_list = [] # should contain none or one only (player or ai for training)
+        if not no_player:
+            # init game state - 'human player' OR 'AI player that is train phase only' (these are unique, might not exists on ai vs bot fight)
+            self.controllable_bot_color = 'dark'  # player color / training agent color
+            bot_colors.remove(self.controllable_bot_color) # used
+            player_location = start_locations[0]
+            self.controllable_bot_list.append( Bot(player_location[0], player_location[1], self.controllable_bot_color) )
 
         # ai players
         self.ai_players = []
@@ -74,8 +78,6 @@ class TerritoryGameEnvironment:
 
         else:
             # initialize bot players
-            bot_colors = Tile.available_colors.copy()
-            bot_colors.remove(self.controllable_bot_color)
             num_computer_players = len(bot_infos)
             num_computer_players = min(3,num_computer_players) # maximum of 3 enemy player
             if num_computer_players == 0: # add a spiral if 0 players are given
@@ -105,7 +107,7 @@ class TerritoryGameEnvironment:
 
                     self.bot_players.append(bot)
 
-            self.entities = [e for e in self.bot_players] + [e for e in self.ai_players] + [self.controllable_bot]
+            self.entities = [e for e in self.bot_players] + [e for e in self.ai_players] + [e for e in self.controllable_bot_list]
 
             for e in self.entities:
                 e.setInitialStandingTileColor(self.tiles) # set the initial standing tile color
@@ -174,6 +176,7 @@ class TerritoryGameEnvironment:
     - train a 'unique' ai agent in the self.ai_player list (which contains only one agent at a time in train loop, so index by self.ai_player[0])
     '''
     def play_step(self,action):
+        ai_trainer = self.controllable_bot_list[0]
         # 1. collect user input
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -181,18 +184,18 @@ class TerritoryGameEnvironment:
                 quit()
 
         self.frame_iteration += 1
-        previous_score = self.controllable_bot.getScore()
+        previous_score = ai_trainer.getScore()
         previous_sum_score = self.get_score_sum()
         '''
         We need direction as output, so we only need index (direction)     
         '''
         # get action from AI, which is a direction input
-        self.ai_take_action(self.controllable_bot, action)
+        self.ai_take_action(ai_trainer, action)
 
         # 2
         self.collect_decision_and_move()
         # assign reward after enclosure
-        score_after_action = self.controllable_bot.getScore()
+        score_after_action = ai_trainer.getScore()
         after_action_sum_score = self.get_score_sum()
 
         reward = score_after_action - previous_score - 1 # bias -1 so that non-rewarding movement will get -1 points
@@ -209,10 +212,10 @@ class TerritoryGameEnvironment:
         if self.allTilesOccupied() or self.frame_iteration > self.max_idle_tolerance: # al region occupied or nothing happened for too long
             game_over = True
             self.sort_score()  # sort the scores
-            return reward, game_over, self.controllable_bot.getScore()
+            return reward, game_over, ai_trainer.getScore()
 
         # 5. return game over and score
-        return reward, game_over, self.controllable_bot.getScore()
+        return reward, game_over, ai_trainer.getScore()
 
 
     def play_step_human_playable(self, ai_actions = []):
@@ -221,19 +224,21 @@ class TerritoryGameEnvironment:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.controllable_bot.setDirection(Direction.LEFT)
-                elif event.key == pygame.K_RIGHT:
-                    self.controllable_bot.setDirection(Direction.RIGHT)
-                elif event.key == pygame.K_UP:
-                    self.controllable_bot.setDirection(Direction.UP)
-                elif event.key == pygame.K_DOWN:
-                    self.controllable_bot.setDirection(Direction.DOWN)
-                elif event.key == pygame.K_r:
-                    self.reset()
+            if self.controllable_bot_list: # if controller (player) exists
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        self.controllable_bot_list[0].setDirection(Direction.LEFT)
+                    elif event.key == pygame.K_RIGHT:
+                        self.controllable_bot_list[0].setDirection(Direction.RIGHT)
+                    elif event.key == pygame.K_UP:
+                        self.controllable_bot_list[0].setDirection(Direction.UP)
+                    elif event.key == pygame.K_DOWN:
+                        self.controllable_bot_list[0].setDirection(Direction.DOWN)
+                    elif event.key == pygame.K_r:
+                        self.reset()
 
-        self.controllable_bot.enforceTarget(self.row, self.col, self.tiles)
+        if self.controllable_bot_list:
+            self.controllable_bot_list[0].enforceTarget(self.row, self.col, self.tiles)
 
         # there exists ai bots
         if ai_actions:
@@ -252,10 +257,10 @@ class TerritoryGameEnvironment:
         if self.allTilesOccupied():
             game_over = True
             self.sort_score() # sort the scores
-            return game_over, self.controllable_bot.getScore()
+            return game_over
 
         # 5. return game over and score
-        return game_over, self.controllable_bot.getScore()
+        return game_over
 
     '''
     Only draw sprites (at the end of human play game)
@@ -355,8 +360,10 @@ class TerritoryGameEnvironment:
         self.display.fill(WHITE)
         self.all_tile_sprites_list.draw(self.display)
 
-        text = self.font_for_score.render("Score: " + str(self.controllable_bot.getScore()), True, RED)
-        self.display.blit(text, [0, 0])
+        if self.controllable_bot_list:
+            text = self.font_for_score.render("Score: " + str(self.controllable_bot_list[0].getScore()), True, RED)
+            self.display.blit(text, [0, 0])
+
         pygame.display.flip()
 
     def _update_ui_ending(self):
@@ -366,8 +373,9 @@ class TerritoryGameEnvironment:
         self.display.fill(WHITE)
         self.all_tile_sprites_list.draw(self.display)
 
-        text = self.font_for_score.render("Score: " + str(self.controllable_bot.getScore()), True, RED)
-        self.display.blit(text, [0, 0])
+        if self.controllable_bot_list:
+            text = self.font_for_score.render("Score: " + str(self.controllable_bot_list[0].getScore()), True, RED)
+            self.display.blit(text, [0, 0])
 
         text = self.font_for_winner_message.render("Winner is " + self.get_winner_color(), True, SOFTRED)
         self.display.blit(text, [self.x_winner_message, self.y_winner_message])
