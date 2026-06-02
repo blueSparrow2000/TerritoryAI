@@ -4,11 +4,15 @@ import random
 class Bot(Tile):
     nearBy = ((0, -1),(1,0),(0,1),(-1,0))
     clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
+
+    botID = 0
+
     def __init__(self, x,y,color):
         super().__init__(x,y,color)
         self.initial_pos = (x,y)
         self.score = 1
-        self.direction = Direction.RIGHT # 내 마지막 향하는 방향
+
+        self.direction = Direction(random.randint(1, 4)) # Direction.RIGHT # 내 마지막 향하는 방향
         self.prev_direction = self.direction
         self.target = None
         self.moveDirectionQueue = deque([]) # 움직일 방향을 저장해두는 queue
@@ -25,6 +29,9 @@ class Bot(Tile):
         self.trajectory_direction = None
 
         self.occupation_stack = []
+
+        self.botID = Bot.botID
+        Bot.botID += 1
 
     ################################## trajectory load stuff #########################
     def load_trajectory(self, traj):

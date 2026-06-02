@@ -43,18 +43,15 @@ class TerritoryGameEnvironment:
         start_locations = ((wall_dist,wall_dist), (self.col - (wall_dist+1), self.row - (wall_dist+1)), (self.col - (wall_dist+1), wall_dist), (wall_dist, self.row - (wall_dist+1)))
 
         # init game state - 'human player' OR 'AI player that is train phase only' (these are unique, might not exists on ai vs bot fight)
-        self.player_color = 'dark'  # player color
+        self.controllable_bot_color = 'dark'  # player color / training agent color
         player_location = start_locations[0]
-        self.playerTile = Bot(player_location[0], player_location[1], self.player_color)
-        # set player standing initial tile color
-        self.playerTile.setInitialStandingTileColor(self.tiles)
-
+        self.controllable_bot = Bot(player_location[0], player_location[1], self.controllable_bot_color)
 
         # ai players
         self.ai_players = []
-
-
-        self.other_players = []
+        # bot (algorithm) players
+        self.bot_players = []
+        # player, ai, bot all entities
         self.entities = []
 
         self.trajectory_length = 0
@@ -71,26 +68,24 @@ class TerritoryGameEnvironment:
                 self.trajectory_length = len(botTraj) # 한번만 세팅해주면 되는데 여러번 세팅하고있음 (많아야 봇 개수만큼, 어차피 다 같을것)
                 bot.load_trajectory(botTraj)
 
-                bot.setInitialStandingTileColor(self.tiles)  # set the initial standing tile color
+                self.bot_players.append(bot)
 
-                self.other_players.append(bot)
-
-            self.entities = self.other_players # same as other players list
+            self.entities = self.bot_players # same as other players list
 
         else:
             # initialize bot players
             bot_colors = Tile.available_colors.copy()
-            bot_colors.remove(self.player_color)
-            num_other_players = len(bot_infos)
-            num_other_players = min(3,num_other_players) # maximum of 3 enemy player
-            if num_other_players == 0: # add a spiral if 0 players are given
-                num_other_players = 1
+            bot_colors.remove(self.controllable_bot_color)
+            num_computer_players = len(bot_infos)
+            num_computer_players = min(3,num_computer_players) # maximum of 3 enemy player
+            if num_computer_players == 0: # add a spiral if 0 players are given
+                num_computer_players = 1
                 bot_infos = (BotInfo('spiral'),)
 
-
-            for i in range(num_other_players):
+            for i in range(num_computer_players):
                 this_bot_info = bot_infos[i]
 
+                # if custom position or color is given, use it instead
                 if this_bot_info.custom_coord: bot_start_location = this_bot_info.custom_coord
                 else: bot_start_location = start_locations[i+1]
                 if this_bot_info.color: this_bot_color = this_bot_info.color
@@ -99,14 +94,21 @@ class TerritoryGameEnvironment:
                 x_bot,y_bot,color_bot = bot_start_location[0],bot_start_location[1], this_bot_color
 
                 bot = None
-                if this_bot_info.type == 'spiral':
-                    bot = SpiralBot(x_bot, y_bot, color_bot)
-                else: # random bot
+                if this_bot_info.type == 'ai': # put it in ai player list
                     bot = Bot(x_bot, y_bot, color_bot)
-                bot.setInitialStandingTileColor(self.tiles) # set the initial standing tile color
-                self.other_players.append(bot)
+                    self.ai_players.append(bot)
+                else:
+                    if this_bot_info.type == 'spiral':
+                        bot = SpiralBot(x_bot, y_bot, color_bot)
+                    else: # random bot
+                        bot = Bot(x_bot, y_bot, color_bot)
 
-            self.entities = [e for e in self.other_players] + [self.playerTile]
+                    self.bot_players.append(bot)
+
+            self.entities = [e for e in self.bot_players] + [e for e in self.ai_players] + [self.controllable_bot]
+
+            for e in self.entities:
+                e.setInitialStandingTileColor(self.tiles) # set the initial standing tile color
 
             # additional mode check - just set bit
             if self.trajectorySaveFileName:
@@ -115,6 +117,7 @@ class TerritoryGameEnvironment:
                     botE.setTraceMode(True)
 
         self.all_tile_sprites_list.add(*self.entities)
+
 
         self.frame_iteration = 0
         self.max_idle_tolerance = self.row+self.col  #maximum steps without any obtaining new region
@@ -128,6 +131,8 @@ class TerritoryGameEnvironment:
         # 이 두 값은 모든 봇이 동일하게 움직임
         self.trajectory_index = 0
 
+    def get_col_row_info(self):
+        return self.col, self.row
 
     def reset(self):
         for tile in self.flat_tile_sprites:
@@ -147,9 +152,8 @@ class TerritoryGameEnvironment:
         self.frame_iteration = 0
 
     def collect_decision_and_move(self):
-        self.playerTile.enforceTarget(self.row, self.col, self.tiles)
         # 1-2. collect bot decisions
-        for botE in self.other_players:
+        for botE in self.bot_players:
             botE.setTarget(self.row, self.col, self.tiles)  # input to botE
             botE.getAction()  # get output from botE
 
@@ -158,8 +162,16 @@ class TerritoryGameEnvironment:
             entity.move()
             entity.detect_possible_Enclosure(self.tiles)
 
+    def ai_take_action(self, ai_bot, action):
+        action_as_direction_index = action.index(1)
+        direction = clock_wise[action_as_direction_index]  # action is defined by clock wise directions
+        ai_bot.setDirection(direction) # player는 타겟을 안정하고, 방향을 먼저 정한다
+        ai_bot.enforceTarget(self.row, self.col, self.tiles)
+
+
     '''
     Train agent loop
+    - train a 'unique' ai agent in the self.ai_player list (which contains only one agent at a time in train loop, so index by self.ai_player[0])
     '''
     def play_step(self,action):
         # 1. collect user input
@@ -169,23 +181,21 @@ class TerritoryGameEnvironment:
                 quit()
 
         self.frame_iteration += 1
-        previous_score = self.playerTile.getScore()
+        previous_score = self.controllable_bot.getScore()
         previous_sum_score = self.get_score_sum()
         '''
         We need direction as output, so we only need index (direction)     
         '''
         # get action from AI, which is a direction input
-        action_as_direction_index = action.index(1)
-        direction = clock_wise[action_as_direction_index]  # action is defined by clock wise directions
-        self.playerTile.setDirection(direction) # player는 타겟을 안정하고, 방향을 먼저 정한다
+        self.ai_take_action(self.controllable_bot, action)
 
         # 2
         self.collect_decision_and_move()
         # assign reward after enclosure
-        score_after_action = self.playerTile.getScore()
+        score_after_action = self.controllable_bot.getScore()
         after_action_sum_score = self.get_score_sum()
 
-        reward = score_after_action - previous_score
+        reward = score_after_action - previous_score - 1 # bias -1 so that non-rewarding movement will get -1 points
         amount_of_tiles_somebody_occupied = after_action_sum_score - previous_sum_score
         if amount_of_tiles_somebody_occupied > 0: # gained some region - reset counter
             self.frame_iteration = 0
@@ -199,13 +209,13 @@ class TerritoryGameEnvironment:
         if self.allTilesOccupied() or self.frame_iteration > self.max_idle_tolerance: # al region occupied or nothing happened for too long
             game_over = True
             self.sort_score()  # sort the scores
-            return reward, game_over, self.playerTile.getScore()
+            return reward, game_over, self.controllable_bot.getScore()
 
         # 5. return game over and score
-        return reward, game_over, self.playerTile.getScore()
+        return reward, game_over, self.controllable_bot.getScore()
 
 
-    def play_step_human_playable(self):
+    def play_step_human_playable(self, ai_actions = []):
         # 1-1. collect user input : player는 타겟을 정하지 않고, 방향을 먼저 정한다
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -213,15 +223,23 @@ class TerritoryGameEnvironment:
                 quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    self.playerTile.setDirection(Direction.LEFT)
+                    self.controllable_bot.setDirection(Direction.LEFT)
                 elif event.key == pygame.K_RIGHT:
-                    self.playerTile.setDirection(Direction.RIGHT)
+                    self.controllable_bot.setDirection(Direction.RIGHT)
                 elif event.key == pygame.K_UP:
-                    self.playerTile.setDirection(Direction.UP)
+                    self.controllable_bot.setDirection(Direction.UP)
                 elif event.key == pygame.K_DOWN:
-                    self.playerTile.setDirection(Direction.DOWN)
+                    self.controllable_bot.setDirection(Direction.DOWN)
                 elif event.key == pygame.K_r:
                     self.reset()
+
+        self.controllable_bot.enforceTarget(self.row, self.col, self.tiles)
+
+        # there exists ai bots
+        if ai_actions:
+            for i in range(len(self.ai_players)):
+                ai_bots = self.ai_players[i]
+                self.ai_take_action(ai_bots, ai_actions[i])
         # 2
         self.collect_decision_and_move()
 
@@ -234,10 +252,10 @@ class TerritoryGameEnvironment:
         if self.allTilesOccupied():
             game_over = True
             self.sort_score() # sort the scores
-            return game_over, self.playerTile.getScore()
+            return game_over, self.controllable_bot.getScore()
 
         # 5. return game over and score
-        return game_over, self.playerTile.getScore()
+        return game_over, self.controllable_bot.getScore()
 
     '''
     Only draw sprites (at the end of human play game)
@@ -337,7 +355,7 @@ class TerritoryGameEnvironment:
         self.display.fill(WHITE)
         self.all_tile_sprites_list.draw(self.display)
 
-        text = self.font_for_score.render("Score: " + str(self.playerTile.getScore()), True, RED)
+        text = self.font_for_score.render("Score: " + str(self.controllable_bot.getScore()), True, RED)
         self.display.blit(text, [0, 0])
         pygame.display.flip()
 
@@ -348,7 +366,7 @@ class TerritoryGameEnvironment:
         self.display.fill(WHITE)
         self.all_tile_sprites_list.draw(self.display)
 
-        text = self.font_for_score.render("Score: " + str(self.playerTile.getScore()), True, RED)
+        text = self.font_for_score.render("Score: " + str(self.controllable_bot.getScore()), True, RED)
         self.display.blit(text, [0, 0])
 
         text = self.font_for_winner_message.render("Winner is " + self.get_winner_color(), True, SOFTRED)

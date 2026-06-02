@@ -54,9 +54,12 @@ class Agent:
     sensing_distance_2_window = ((0, -1), (0,-2), (1, -1), (1, 0), (2,0), (1, 1), (0, 1), (0,2), (-1, 1), (-1, 0), (-2,0), (-1, -1)) # 12 depth 2 sensing
     # sensing_distance_3_window = (
     # (0, -1), (0, -2), (1, -1), (1, 0), (2, 0), (1, 1), (0, 1), (0, 2), (-1, 1), (-1, 0), (-2, 0), (-1, -1))
-    typeOfRegion = ('white', 'my', 'wall', 'enemy') # used for model input size determining
+    typeOfRegion = ('white', 'my', 'wall', 'enemy')#('white', 'my', 'wall', 'enemy') # used for model input size determining
 
     agentID = 0
+
+    # map helper variables - need to be set
+    mapCol, mapRow = 0, 0
 
     def __init__(self):
         self.n_games = 0
@@ -64,11 +67,10 @@ class Agent:
         self.epsilon = 0  # randomness
         self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
-        self.my_sensing_window = Agent.sensing_distance_2_window
+        self.my_sensing_window = Agent.sensing_distance_1_window
         self.model = Linear_QNet(len(self.my_sensing_window)*len(Agent.typeOfRegion), 256, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
-        # used to handle multiple agents
         self.agentID = Agent.agentID
         Agent.agentID += 1
 
@@ -78,21 +80,13 @@ class Agent:
         self.model.load_state_dict(torch.load(file_name))
         self.model.eval()
 
-    def get_state(self, game):
-        # 개선점 : 과거의 액션을 인풋으로 줌
-        # 과거의 연속된 액션을 인풋으로 주면 좀 더 메모리 ? 히스토리에 대한 인풋을 얻는거니까 
-        # 과거의 액션 개수를 1개 -> 2개씩 줘보고 어떻게 될지 테스트 ㄱㄱ
+    def get_state(self, bot, tiles):
+        # print("Feeding state of ",bot.botID)
         # get states from nearby observation
         nearby_info = []
 
-        col, row = game.col, game.row
-
-        # 이걸로 pos, color 정보 받아오자
-        # this_agent_tile = game.ai_players[self.agentID]
-
-        xCenter,yCenter = game.playerTile.getPos()
-        agent_color = game.playerTile.getColor()
-
+        xCenter,yCenter = bot.getPos()
+        agent_color = bot.getColor()
 
         # 각 픽셀이 [white인지, 내 땅인지, 벽인지, 적땅인지] 매핑된 정보를 사용
 
@@ -100,8 +94,8 @@ class Agent:
             xNear, yNear = xCenter + dx, yCenter + dy
             ########################## 그냥 각 정보(벽인지, 내 타일인지, 빈 타일인지, 적 타일인지) 마다 on off 형식으로 줘볼까?
             # region type info: each tile is [isWhite, isMyTile, isWall, isEnemyTile]
-            if (0 <= xNear < col) and (0 <= yNear < row):
-                this_tile_color = game.tiles[yNear][xNear].getColor()
+            if (0 <= xNear < Agent.mapCol) and (0 <= yNear < Agent.mapRow):
+                this_tile_color = tiles[yNear][xNear].getColor()
                 if this_tile_color == 'white': # white (empty)
                     nearby_info.append([1,0,0,0])
                 elif this_tile_color == agent_color: # my tile
@@ -116,7 +110,7 @@ class Agent:
         # transpose the data for locality
         # 1차원으로 평탄화해서 줄때 같은 종류의 픽셀 정보는 비슷한 순서로 들어오게 하려고 함 (몇번째 픽셀인지 정보는 spread out되지만.. 즉 의미적 locality를 원하면 transpose하고, 공간적 locality를 원하면 transpose없이 실행)
         # [ 픽셀1이 white인지, 픽셀 2가 white인지, ... , 픽셀 N이 white인지, 픽셀 1이 내땅인지, ..., 픽셀N이 내땅인지, ... ]
-        state = [list(row) for row in zip(*nearby_info)]
+        state = [list(nearby_row) for nearby_row in zip(*nearby_info)]
         # flatten
         state = [item for sublist in state for item in sublist]
 
@@ -145,21 +139,32 @@ class Agent:
     '''
     def get_action(self, state):
         # random moves: tradeoff exploration / exploitation
-        self.epsilon = max(1,self.explore_until_step - self.n_games)
+        self.epsilon = self.explore_until_step - self.n_games
+        #self.epsilon = max(1,self.explore_until_step - self.n_games)
         # max(0,self.explore_until_step - self.n_games)  is same effect as 'self.epsilon = self.explore_until_step - self.n_games'
 
         final_move = [0, 0, 0, 0]
-        if random.randint(0, 200) < self.epsilon:
+        if random.randint(0, 200) < self.epsilon: # epsilon greedy
             move = random.randint(0, 3)
             final_move[move] = 1
-        else:
-            state0 = torch.tensor(state, dtype=torch.float)
-            prediction = self.model(state0)
-            move = torch.argmax(prediction).item()
-            final_move[move] = 1
+            return final_move
+        # choose greedy action
+        return self.get_action_deterministic(state)
+
+    # choose greedy action
+    def get_action_deterministic(self, state):
+        final_move = [0, 0, 0, 0]
+        state0 = torch.tensor(state, dtype=torch.float)
+        prediction = self.model(state0)
+        move = torch.argmax(prediction).item()
+        final_move[move] = 1
 
         return final_move
 
+    @classmethod
+    def set_col_row(cls, col, row):
+        cls.mapCol = col
+        cls.mapRow = row
 
 def train():
     global TileMapName, BotList
@@ -178,16 +183,18 @@ def train():
     # game = TerritoryGameEnvironment(trajectorySaveFileName = "traceAgent",mapName = TileMapName, bot_infos = BotList)
     # without trace
     game = TerritoryGameEnvironment(mapName=TileMapName, bot_infos=BotList)
+    col,row = game.get_col_row_info()
+    Agent.set_col_row(col,row)
     while True:
         # get old state
-        state_old = agent.get_state(game)
+        state_old = agent.get_state(game.controllable_bot, game.tiles)
 
         # get move
         final_move = agent.get_action(state_old)
 
         # perform move and get new state
         reward, done, score = game.play_step(final_move)
-        state_new = agent.get_state(game)
+        state_new = agent.get_state(game.controllable_bot, game.tiles)
 
         # train short memory
         agent.train_short_memory(state_old, final_move, reward, state_new, done)
@@ -204,6 +211,7 @@ def train():
             if score > record:
                 record = score
                 agent.model.save() # 기록 갱신하는 모델 파라미터는 저장됨
+                print("** Model saved! **")
 
             print('Game', agent.n_games, 'Score', score, 'Record:', record)
 
