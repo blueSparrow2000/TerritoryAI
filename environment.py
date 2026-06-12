@@ -5,7 +5,7 @@ import time
 pygame.init()
 
 class TerritoryGameEnvironment:
-    def __init__(self,no_player = False, trajectorySaveFileName = None,trajectoryTrackingFileName = None, mapName = 'blank 10 12', bot_infos = (BotInfo('spiral'),)):
+    def __init__(self,record_mode = False,no_player = False, trajectorySaveFileName = None,trajectoryTrackingFileName = None, mapName = 'blank 10 12', bot_infos = (BotInfo('spiral'),)):
         self.trajectorySaveFileName = trajectorySaveFileName
         self.trajectoryTrackingFileName = trajectoryTrackingFileName
 
@@ -22,6 +22,11 @@ class TerritoryGameEnvironment:
         WIDTH, HEIGHT = self.col * SIZE, self.row * SIZE
         self.w = WIDTH
         self.h = HEIGHT
+
+        self.record_mode = record_mode
+        if self.record_mode:
+            self.h = HEIGHT + 250
+
 
         # UNCHANGED: init display
         self.display = pygame.display.set_mode((self.w, self.h))
@@ -133,6 +138,10 @@ class TerritoryGameEnvironment:
         # 이 두 값은 모든 봇이 동일하게 움직임
         self.trajectory_index = 0
 
+        # for scoreboard
+        self.scoreboard = ScoreBoard(self.w//2 - 100,HEIGHT + 20,self.total_num_tiles,element_amount = len(self.entities))
+
+
     def get_col_row_info(self):
         return self.col, self.row
 
@@ -216,6 +225,7 @@ class TerritoryGameEnvironment:
 
         # 3. update ui and clock
         self._update_ui()
+        pygame.display.flip()
         self.clock.tick(TRAINFPS)
 
         # 4. check if over (all tiles are occupied)
@@ -262,6 +272,7 @@ class TerritoryGameEnvironment:
 
         # 3. update ui and clock
         self._update_ui()
+        pygame.display.flip()
         self.clock.tick(FPS)
 
         # 4. check if over (all tiles are occupied)
@@ -284,6 +295,7 @@ class TerritoryGameEnvironment:
                 quit()
 
         self._update_ui_ending()
+        pygame.display.flip()
         self.clock.tick(FPS)
 
     '''
@@ -361,38 +373,33 @@ class TerritoryGameEnvironment:
 
         # update with respect to trajectory given
         self._update_ui()
+        pygame.display.flip()
         self.clock.tick(FPS)
 
         return game_over, 0
 
     def _update_ui(self):
-        # draw the head of the tile last -> so that it is on top
-
         self.all_tile_sprites_list.update()
-        self.display.fill(WHITE)
+        self.display.fill(BACKGROUND)
+
         self.all_tile_sprites_list.draw(self.display)
 
-        if self.controllable_bot_list:
-            text = self.font_for_score.render("Score: " + str(self.controllable_bot_list[0].getScore()), True, RED)
-            self.display.blit(text, [0, 0])
-
-        pygame.display.flip()
+        # draw the head of the tile last -> so that it is on top
+        if self.record_mode:
+            self.sort_score()  # sort the scores
+            # draw the UI
+            score_tuple_list = [(botE.getColor(), botE.getName(), botE.getScore()) for botE in self.entities]
+            self.scoreboard.update_and_draw(score_tuple_list, self.display)
+        elif self.controllable_bot_list: # record mode가 아닐때만 필요함
+                text = self.font_for_score.render("Score: " + str(self.controllable_bot_list[0].getScore()), True, RED)
+                self.display.blit(text, [0, 0])
 
     def _update_ui_ending(self):
-        # draw the head of the tile last -> so that it is on top
+        self._update_ui()
 
-        self.all_tile_sprites_list.update()
-        self.display.fill(WHITE)
-        self.all_tile_sprites_list.draw(self.display)
-
-        if self.controllable_bot_list:
-            text = self.font_for_score.render("Score: " + str(self.controllable_bot_list[0].getScore()), True, RED)
-            self.display.blit(text, [0, 0])
-
-        text = self.font_for_winner_message.render("Winner is " + self.get_winner_color(), True, SOFTRED)
-        self.display.blit(text, [self.x_winner_message, self.y_winner_message])
-
-        pygame.display.flip()
+        if not self.record_mode:
+            text = self.font_for_winner_message.render("Winner is " + self.get_winner_color(), True, SOFTRED)
+            self.display.blit(text, [self.x_winner_message, self.y_winner_message])
 
     '''
     score 
@@ -427,3 +434,12 @@ class TerritoryGameEnvironment:
             print("{:10s} : {:5d}".format(entity_name,score_tuple[1]))
 
         print("{:8s} {} / {}".format('Sum',self.get_score_sum(),self.total_num_tiles))
+
+
+    def draw_pannel(self):
+        text = self.font_for_winner_message.render("Winner is " + self.get_winner_color(), True, SOFTRED)
+        self.display.blit(text, [self.x_winner_message, self.y_winner_message])
+
+
+
+

@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # load AI agent - we use same model(agent) for each bots
     agent = Agent()
     agent.load_model() # put a model name here for specific model
-    # agent.load_model('model_window2_senseType3') # put a model name here for specific model
+    # agent.load_model('DQN_window2_senseType3') # put a model name here for specific model
 
     col,row = 10,10
     Agent.set_col_row(col,row)

@@ -193,3 +193,60 @@ class Tile(pygame.sprite.Sprite):
     @staticmethod
     def is_wall_color(color):
         return color == 'wall'
+
+
+class ScoreEntry():
+    color_lookup_table = {'dark':(10,10,10), 'green':(162,217,138), 'blue':(73,126,255), 'orange':(255,188,151), 'purple':(139,104,153), 'red':(255,130,132), 'skyblue':(112,224,255), 'white':(247,247,247),'yellow':(242,230,132)}
+
+    def __init__(self, x, y,total_num_tiles):
+        self.total_num_tiles = total_num_tiles
+        self.x = x
+        self.y = y
+        self.width = 400
+        self.height = 44
+        self.rectX = self.x - self.width//4
+        self.rectY = self.y - self.height//4
+
+        self.name = ''
+        self.color = 'white'
+        self.textColor = 'white'
+        self.scorePercentage = 0
+
+        self.image = Tile.head_tile_image_dict[self.color].image
+        self.font_for_winner_message = pygame.font.SysFont('arial', 20, True)
+
+    def draw(self,screen):
+        pygame.draw.rect(screen, LIGHTER_BACKGROUND, pygame.Rect(self.rectX, self.rectY, self.width, self.height), 0, 10)
+
+        screen.blit(self.image, (self.x , self.y))
+        text_name = self.font_for_winner_message.render("{:10}".format(self.name), True, self.textColor)
+        text_score = self.font_for_winner_message.render("{:2d} %".format(self.scorePercentage),True, self.textColor)
+        screen.blit(text_name, [self.x + 60, self.y])
+        screen.blit(text_score, [self.x + 160, self.y])
+
+
+    def update(self, record):
+        self.color = record[0]
+        self.textColor = self.color
+        if self.textColor in ScoreEntry.color_lookup_table:
+            self.textColor = ScoreEntry.color_lookup_table[self.textColor]
+        self.name = record[1]
+        self.scorePercentage = round((record[2]/self.total_num_tiles)*100)
+        self.image = Tile.head_tile_image_dict[self.color].image
+
+
+class ScoreBoard():
+    def __init__(self, x, y, total_num_tiles,element_amount = 1):
+        self.total_num_tiles = total_num_tiles
+        self.x = x
+        self.y = y
+        self.gap = 60
+        self.img_size = 20
+        self.placeHolderList = [ScoreEntry(self.x ,self.y+ self.gap*i,self.total_num_tiles) for i in range(element_amount)]
+
+    def update_and_draw(self,records, screen):
+        index = 0
+        for entry in self.placeHolderList:
+            entry.update(records[index])
+            entry.draw(screen)
+            index+=1

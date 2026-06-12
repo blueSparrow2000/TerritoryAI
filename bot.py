@@ -104,6 +104,9 @@ class Bot(Tile):
         tiles[self.y][self.x].setColor(self.color)  # set the initial standing tile color
         self.add_occupation_stack([(self.x, self.y)])
 
+    def getColor(self):
+        return self.color
+
     def getName(self):
         return self.name
 

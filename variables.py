@@ -8,9 +8,9 @@ class BotInfo:
     name: str = None
     custom_coord: tuple[int,int] = None
 
-######## Simulation configuration ##########
-TileMapName = 'blank 20 20' # 'circle 15' #'blank 20 20'
-BotList = (BotInfo('bot'),BotInfo('ai', name='ai',custom_coord=(6,6)))  # (  BotInfo('ai', name='ai'),  BotInfo('ai', name='ai'))   # BotInfo('ai') #BotInfo('spiral') ,
+######## Default Simulation Configuration ##########
+TileMapName = 'circle 15'#'blank 20 20' # 'circle 15' #'blank 20 20'
+BotList = (BotInfo('spiral', name='spiral'),BotInfo('ai', name='ai')) # (BotInfo('spiral', name='spiral'),BotInfo('ai', name='ai'), BotInfo('bot', name='random')) #(BotInfo('bot'),BotInfo('ai', name='ai',custom_coord=(6,6)))  # (  BotInfo('ai', name='ai'),  BotInfo('ai', name='ai'))   # BotInfo('ai') #BotInfo('spiral') ,
 #  (  BotInfo('spiral'), BotInfo('spiral'), BotInfo('spiral') )
 #(  BotInfo('bot'),  BotInfo('spiral', 'red',custom_coord= (6,6)), )
 #############################################
@@ -31,7 +31,8 @@ SOFTRED = (150, 50, 50)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
-
+BACKGROUND = (227,227,227)
+LIGHTER_BACKGROUND = (240,240,240)
 
 class Direction(Enum):
     RIGHT = 1

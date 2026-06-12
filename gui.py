@@ -315,3 +315,4 @@ class LifeViewer():
                 if cnt < self.life:
                     life.draw(screen)
                 cnt += 1
+
