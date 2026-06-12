@@ -49,7 +49,7 @@ class TerritoryGameEnvironment:
             self.controllable_bot_color = 'dark'  # player color / training agent color
             bot_colors.remove(self.controllable_bot_color) # used
             player_location = start_locations[0]
-            self.controllable_bot_list.append( Bot(player_location[0], player_location[1], self.controllable_bot_color) )
+            self.controllable_bot_list.append( Bot(player_location[0], player_location[1], self.controllable_bot_color, name = 'player') )
 
         # ai players
         self.ai_players = []
@@ -97,13 +97,13 @@ class TerritoryGameEnvironment:
 
                 bot = None
                 if this_bot_info.type == 'ai': # put it in ai player list
-                    bot = Bot(x_bot, y_bot, color_bot)
+                    bot = Bot(x_bot, y_bot, color_bot,this_bot_info.name)
                     self.ai_players.append(bot)
                 else:
                     if this_bot_info.type == 'spiral':
-                        bot = SpiralBot(x_bot, y_bot, color_bot)
+                        bot = SpiralBot(x_bot, y_bot, color_bot,this_bot_info.name)
                     else: # random bot
-                        bot = Bot(x_bot, y_bot, color_bot)
+                        bot = Bot(x_bot, y_bot, color_bot,this_bot_info.name)
 
                     self.bot_players.append(bot)
 
@@ -167,8 +167,8 @@ class TerritoryGameEnvironment:
     def ai_take_action(self, ai_bot, action):
         action_as_direction_index = action.index(1)
         direction = clock_wise[action_as_direction_index]  # action is defined by clock wise directions
-        ai_bot.setDirection(direction) # player는 타겟을 안정하고, 방향을 먼저 정한다
-        ai_bot.enforceTarget(self.row, self.col, self.tiles)
+        ai_bot.setDirection(direction) # player 및 ai는 타겟을 정하지 않고, 방향을 먼저 정한다
+        return ai_bot.enforceTarget(self.row, self.col, self.tiles)
 
 
     '''
@@ -190,7 +190,7 @@ class TerritoryGameEnvironment:
         We need direction as output, so we only need index (direction)     
         '''
         # get action from AI, which is a direction input
-        self.ai_take_action(ai_trainer, action)
+        valid_move = self.ai_take_action(ai_trainer, action)
 
         # 2
         self.collect_decision_and_move()
@@ -198,7 +198,18 @@ class TerritoryGameEnvironment:
         score_after_action = ai_trainer.getScore()
         after_action_sum_score = self.get_score_sum()
 
-        reward = score_after_action - previous_score - 1 # bias -1 so that non-rewarding movement will get -1 points
+        # 1) bias -1 so that non-rewarding movement will get -1 points
+        # ex) moving to my tiles / moving towards me or enemy tile
+        # 2) max score of 2 (since if we give too much score for enclosing action, model will only remember such direction in certain state
+        # if we give big window size that covers whole space, it is fine, but we only give local neighborhood -> 현재 상태에서 한 방향 이동만 고집하게 되면 그냥 한방향으로 이동하는게 됨
+        # 분석) 보상을 최대 2로 하니까, 주변만 보는(window 2) state에서, 더 근시안적이게 됨. 움직임이 주로 왔다갔다 하면서 작은 공간을 감싸는 전략을 쓴다
+        # 이렇게 내 타일로 가거나 벽/상대랑 부딫히면 무조건 -1하니까 백트래킹, 돌아가기를 안함
+        # 충돌이랑 내 타일로 이동하는거랑 구분할 필요가 잆음 (움직임이 캔슬되어서 못움직이는 경우만 -1하고, 내 타일 이동은 0로 하자)
+        bias = -1
+        if valid_move: # 실제로 이동을 했다면 0으로, 이동하지 않았다면 -1
+            bias = 0
+        reward = min(2, score_after_action - previous_score + bias)
+
         amount_of_tiles_somebody_occupied = after_action_sum_score - previous_sum_score
         if amount_of_tiles_somebody_occupied > 0: # gained some region - reset counter
             self.frame_iteration = 0
@@ -245,6 +256,7 @@ class TerritoryGameEnvironment:
             for i in range(len(self.ai_players)):
                 ai_bots = self.ai_players[i]
                 self.ai_take_action(ai_bots, ai_actions[i])
+
         # 2
         self.collect_decision_and_move()
 
@@ -399,7 +411,7 @@ class TerritoryGameEnvironment:
         self.entities.sort(key = lambda e:-e.getScore())
 
     def get_winner_color(self):
-        winner_color = self.entities[0].getColor()
+        winner_color = self.entities[0].getName()
         if winner_color == 'dark':
             winner_color = 'player'
         return winner_color
@@ -407,7 +419,7 @@ class TerritoryGameEnvironment:
     def print_final_scores(self):
         print("All region aquired!")
         print("#" * 10, " Final Score ", "#" * 10)
-        score_tuple_list = [(botE.getColor(), botE.getScore()) for botE in self.entities]
+        score_tuple_list = [(botE.getName(), botE.getScore()) for botE in self.entities]
         for score_tuple in score_tuple_list:
             entity_name = score_tuple[0]
             if entity_name == 'dark': # player

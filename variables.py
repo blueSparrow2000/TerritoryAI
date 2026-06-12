@@ -5,11 +5,12 @@ from dataclasses import dataclass
 class BotInfo:
     type: str = 'bot'
     color: str = None
+    name: str = None
     custom_coord: tuple[int,int] = None
 
 ######## Simulation configuration ##########
 TileMapName = 'blank 20 20' # 'circle 15' #'blank 20 20'
-BotList = (BotInfo('ai'),)  # (BotInfo('ai'),) # (  BotInfo('ai'),  BotInfo('ai'))  #(  BotInfo('ai'),  BotInfo('ai'))  # BotInfo('ai') #BotInfo('spiral') ,
+BotList = (BotInfo('bot'),BotInfo('ai', name='ai',custom_coord=(6,6)))  # (  BotInfo('ai', name='ai'),  BotInfo('ai', name='ai'))   # BotInfo('ai') #BotInfo('spiral') ,
 #  (  BotInfo('spiral'), BotInfo('spiral'), BotInfo('spiral') )
 #(  BotInfo('bot'),  BotInfo('spiral', 'red',custom_coord= (6,6)), )
 #############################################

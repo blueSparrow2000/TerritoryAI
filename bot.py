@@ -7,7 +7,7 @@ class Bot(Tile):
 
     botID = 0
 
-    def __init__(self, x,y,color):
+    def __init__(self, x,y,color, name = None):
         super().__init__(x,y,color)
         self.initial_pos = (x,y)
         self.score = 1
@@ -29,6 +29,10 @@ class Bot(Tile):
         self.trajectory_direction = None
 
         self.occupation_stack = []
+
+        self.name = self.color
+        if name:
+            self.name = name
 
         self.botID = Bot.botID
         Bot.botID += 1
@@ -98,9 +102,10 @@ class Bot(Tile):
 
     def setInitialStandingTileColor(self,tiles):
         tiles[self.y][self.x].setColor(self.color)  # set the initial standing tile color
-
         self.add_occupation_stack([(self.x, self.y)])
 
+    def getName(self):
+        return self.name
 
     def getScore(self):
         return self.score
@@ -160,11 +165,13 @@ class Bot(Tile):
             move_to_tile = tiles[yNext][xNext]
             ### 사실 이거 필요 없긴 함 ### 아래에서 self.color 가 'wall'이라서
             if move_to_tile.is_wall():
-                return # invalid move (into the wall)
+                return False# invalid move (into the wall)
             ### 사실 이거 필요 없긴 함 ###
             move_tile_color = move_to_tile.getColor()
             if move_tile_color == 'white' or move_tile_color == self.color:  # valid move
                 self.target = move_to_tile
+                return True # target enforce valid
+        return False
 
     '''
     target으로 가는 방향을 설정 (target이 occupy되지 않은 동안 target으로 가는 경로) 
@@ -312,8 +319,8 @@ class Bot(Tile):
 
 
 class SpiralBot(Bot):
-    def __init__(self, x,y,color):
-        super().__init__(x,y,color)
+    def __init__(self, x,y,color, name = None):
+        super().__init__(x,y,color,name)
 
     '''
     Clockwise sweep
@@ -354,8 +361,8 @@ class SpiralBot(Bot):
 
 
 class GreedyBot(Bot):
-    def __init__(self, x,y,color):
-        super().__init__(x,y,color)
+    def __init__(self, x,y,color, name = None):
+        super().__init__(x,y,color,name)
 
     '''
     Greedy

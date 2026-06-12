@@ -53,8 +53,8 @@ class Agent:
     sensing_distance_1_window = ((0, -1),(1,0),(0,1),(-1,0)) # 4
     sensing_distance_2_window = ((0, -1), (0,-2), (1, -1), (1, 0), (2,0), (1, 1), (0, 1), (0,2), (-1, 1), (-1, 0), (-2,0), (-1, -1)) # 12 depth 2 sensing
     sensing_distance_3_window = ((0, -1), (0, -2),(0,-3), (1,0), (2,0), (3,0), (0,1), (0,2), (0,3), (-1,0), (-2,0), (-3,0), (1,-1), (1,-2), (2,-1),(1,1),(2,1),(1,2),(-1,1), (-2,1), (-1,2), (-1,-1), (-1,-2), (-2,-1) )
-    typeOfRegion = ('white', 'my', 'wall', 'enemy')#('white', 'my', 'wall', 'enemy') # used for model input size determining
-
+    # typeOfRegion = ('white', 'my', 'wall', 'enemy')#('white', 'my', 'wall', 'enemy') # used for model input size determining
+    typeOfRegion = ('blank', 'me', 'obstacle') # obstacle is wall or enemy
     agentID = 0
 
     # map helper variables - need to be set
@@ -78,7 +78,8 @@ class Agent:
         model_folder_path = self.model.get_model_folder_path()
         file_name = os.path.join(model_folder_path, modelName)
         self.model.load_state_dict(torch.load(file_name))
-        self.model.eval()
+        # self.model.eval()
+
 
     def get_state(self, bot, tiles):
         # print("Feeding state of ",bot.botID)
@@ -88,31 +89,51 @@ class Agent:
         xCenter,yCenter = bot.getPos()
         agent_color = bot.getColor()
 
-        # 각 픽셀이 [white인지, 내 땅인지, 벽인지, 적땅인지] 매핑된 정보를 사용
 
-        for dx,dy in self.my_sensing_window:
-            xNear, yNear = xCenter + dx, yCenter + dy
-            ########################## 그냥 각 정보(벽인지, 내 타일인지, 빈 타일인지, 적 타일인지) 마다 on off 형식으로 줘볼까?
-            # region type info: each tile is [isWhite, isMyTile, isWall, isEnemyTile]
-            if (0 <= xNear < Agent.mapCol) and (0 <= yNear < Agent.mapRow):
-                this_tile_color = tiles[yNear][xNear].getColor()
-                if this_tile_color == 'white': # white (empty)
-                    nearby_info.append([1,0,0,0])
-                elif this_tile_color == agent_color: # my tile
-                    nearby_info.append([0,1,0,0])
-                elif Tile.is_wall_color(this_tile_color): # inner wall
-                    nearby_info.append([0, 0, 1, 0])
-                else:  # other colored tile
-                    nearby_info.append([0,0,0,1])
-            else: # out of range (wall)
-                nearby_info.append([0,0,1,0])
+        # 각 픽셀이 [white인지, 내 땅인지, 벽인지, 적땅인지] 매핑된 정보를 사용
+        if len(Agent.typeOfRegion) == 4:
+            for dx,dy in self.my_sensing_window:
+                xNear, yNear = xCenter + dx, yCenter + dy
+                ########################## 그냥 각 정보(벽인지, 내 타일인지, 빈 타일인지, 적 타일인지) 마다 on off 형식으로 줘볼까?
+                # region type info: each tile is [isWhite, isMyTile, isWall, isEnemyTile]
+                if (0 <= xNear < Agent.mapCol) and (0 <= yNear < Agent.mapRow):
+                    this_tile_color = tiles[yNear][xNear].getColor()
+                    if this_tile_color == 'white': # white (empty)
+                        nearby_info.append([1,0,0,0])
+                    elif this_tile_color == agent_color: # my tile
+                        nearby_info.append([0,1,0,0])
+                    elif Tile.is_wall_color(this_tile_color): # inner wall
+                        nearby_info.append([0, 0, 1, 0])
+                    else:  # other colored tile
+                        nearby_info.append([0,0,0,1])
+                else: # out of range (wall)
+                    nearby_info.append([0,0,1,0])
+
+        elif len(Agent.typeOfRegion) ==3: # cell into 3 type
+            for dx,dy in self.my_sensing_window:
+                xNear, yNear = xCenter + dx, yCenter + dy
+                ########################## 그냥 각 정보(벽인지, 내 타일인지, 빈 타일인지, 적 타일인지) 마다 on off 형식으로 줘볼까?
+                # region type info: each tile is [isWhite, isMyTile, isObstacle] # Obstacle = not movable
+                if (0 <= xNear < Agent.mapCol) and (0 <= yNear < Agent.mapRow):
+                    this_tile_color = tiles[yNear][xNear].getColor()
+                    if this_tile_color == 'white': # white (empty)
+                        nearby_info.append([1,0,0])
+                    elif this_tile_color == agent_color: # my tile
+                        nearby_info.append([0,1,0])
+                    else:  # other colored tile or wall
+                        nearby_info.append([0,0,1])
+                else: # out of range (wall)
+                    nearby_info.append([0,0,1])
 
         # transpose the data for locality
         # 1차원으로 평탄화해서 줄때 같은 종류의 픽셀 정보는 비슷한 순서로 들어오게 하려고 함 (몇번째 픽셀인지 정보는 spread out되지만.. 즉 의미적 locality를 원하면 transpose하고, 공간적 locality를 원하면 transpose없이 실행)
         # [ 픽셀1이 white인지, 픽셀 2가 white인지, ... , 픽셀 N이 white인지, 픽셀 1이 내땅인지, ..., 픽셀N이 내땅인지, ... ]
-        state = [list(nearby_row) for nearby_row in zip(*nearby_info)]
-        # flatten
-        state = [item for sublist in state for item in sublist]
+
+        # state를 transpose해서 줄지 그냥 줄지
+        # state = [list(nearby_row) for nearby_row in zip(*nearby_info)]
+        state = nearby_info
+
+        state = [item for sublist in state for item in sublist] # flatten
 
         # print(state)
         return np.array(state, dtype=int)
@@ -156,6 +177,7 @@ class Agent:
         final_move = [0, 0, 0, 0]
         state0 = torch.tensor(state, dtype=torch.float)
         prediction = self.model(state0)
+        # print(prediction)
         move = torch.argmax(prediction).item()
         final_move[move] = 1
 
@@ -167,7 +189,10 @@ class Agent:
         cls.mapRow = row
 
 def train():
-    global TileMapName, BotList
+    # global TileMapName, BotList
+    TileMapName = 'blank 20 20'  # 'circle 15' #'blank 20 20'
+    BotList = (BotInfo('bot'),)
+
     # plot helper: for keeping recent 10 scores
     last_N_games = 10
     oldest_index = 0
