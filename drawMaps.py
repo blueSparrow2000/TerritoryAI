@@ -64,7 +64,7 @@ class TileMapDrawer:
         return False
 
 if __name__ == '__main__':
-    simulate = TileMapDrawer('box 20 20',True)
+    simulate = TileMapDrawer('circle 15',True)
     while True:
         quit = simulate.draw_map()
         if quit:

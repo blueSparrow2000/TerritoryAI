@@ -1,8 +1,9 @@
 # TERRITORY WAR
 A python implementation of territory war for Reinforcement Learning
 
-
 Change the variables in 'variables.py' to try out different tilemaps & bots
+
+Current version supports simple DQN implementation
 
 
 ## Installations
@@ -58,7 +59,9 @@ Press Enter for forward step, Backspace for backward step
 
 
 ### Youtube test link 
+AI learns to play the Territory War
 
+https://youtube.com/shorts/QMFXXalIBWw
 
 ## Files
 - tile.py      
