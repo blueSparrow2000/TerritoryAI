@@ -116,17 +116,23 @@ contains global variables
 
 
 # AI info
-The agent retrieves information about tiles that are 2 units apart from the state.            
-Tile information is classified into the following three types:
-White tile (Score +1 when moving)
-My tile (Score +0 when moving)
-Enemy tile or wall (Score -1 when moving;moving in that direction is canceled and becomes a meaningless move)
+The agent retrieves state information about tiles that are closer than 2 units (window distance 2).            
+Tile information is classified into the following three types:          
+
+White tile (Score +1 when moving)          
+
+My tile (Score +0 when moving)          
+
+Enemy tile or wall (Score -1 when moving;moving in that direction is canceled and becomes a meaningless move)          
            
 The agent can take actions to move one pixel up, down, left, or right using the above state information.           
 
-The reward is +1 when capturing one white tile, +2 when capturing one or more white tiles, -1 when attempting to move to a wall or opponent's tile, and 0 otherwise.           
+The reward is +1 when capturing one white tile, +2 when capturing more than one white tile, -1 when attempting to move to a wall or opponent's tile, and 0 otherwise (moving to already visited tile).           
 
-Behavior: 랜덤 알고리즘과 대적시켜 학습시켰는데, 이렇게 하니 길게 길을 파서 랜덤 알고리즘을 유도해 가두게 시켜 빠져나오는데 시간이 걸리게 함! 이런 전략은 생각못했다
+Behavior: 
+
+I trained the agent against a random algorithm in a 20x20 box, and the agent dug a long path to lure the random algorithm into a trap, making it take a long time to escape! 
+I hadn't thought of such a strategy.
 
 
 # Discussion
