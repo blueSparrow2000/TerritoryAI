@@ -112,7 +112,7 @@ contains global variables
 2026.06.12
 - make method to check all (current state -> action) pairs 
 - bug fix (Agent map, col information must be set manually at the beginning!)
-
+- record mode: shows current scoreboard
 
 
 # AI info
