@@ -28,6 +28,8 @@ player and agents are 'black' colored, and other colors are bots
 
 Use Arrow keys to move to each direction
 
+Press 'R' to restart the game
+
 - Record trajectory (complicated)
 
 To record the trace of the run, set the trajectorySaveFileName = "[trace file name]" parameter in the environment initialization
