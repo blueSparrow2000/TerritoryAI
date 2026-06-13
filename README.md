@@ -119,6 +119,8 @@ contains global variables
 
 
 # AI info
+<img src="./sample_run/window 2.png" width="200" align="center">
+
 The agent retrieves state information about tiles that are closer than 2 units (window distance 2).            
 Tile information is classified into the following three types:          
 
@@ -128,11 +130,18 @@ My tile (Score +0 when moving)
 
 Enemy tile or wall (Score -1 when moving;moving in that direction is canceled and becomes a meaningless move)          
            
+<img src="./sample_run/sample action.png" width="200" align="center">
+
 The agent can take actions to move one pixel up, down, left, or right using the above state information.           
 
-The reward is +1 when capturing one white tile, +2 when capturing more than one white tile, -1 when attempting to move to a wall or opponent's tile, and 0 otherwise (moving to already visited tile).           
+<img src="./sample_run/sample reward.png" width="200" align="center">
+
+The reward is +1 when capturing one white tile, +2 when action captures more than one white tile, -1 when attempting to move to a wall or opponent's tile, and 0 otherwise (moving to already visited tile).           
 
 Behavior: 
+
+<img src="./sample_run/lure.png" width="200" align="center">
+
 
 I trained the agent against a random algorithm in a 20x20 box, and the agent dug a long path to lure the random algorithm into a trap, making it take a long time to escape! 
 I hadn't thought of such a strategy.
