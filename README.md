@@ -16,15 +16,19 @@ pytorch
 
 
 ## Run
-Run 'agent.py' to train RL agent
+#### Run 'agent.py' to train RL agent
 
-Run 'human_playable.py' to play yourself 
+#### Run 'human_playable.py' to play yourself
+
+#### Run 'human_vs_ai_playable.py' to compete against AI
+
+player and agents are 'black' colored, and other colors are bots
+
+- Control
 
 Use Arrow keys to move to each direction
 
-For both case, player and agents are 'black' colored, and other colors are bots
-
-
+- Record trajectory (complicated)
 
 To record the trace of the run, set the trajectorySaveFileName = "[trace file name]" parameter in the environment initialization
 
@@ -35,7 +39,7 @@ Run 'trajectory_simulation.py' with trajectoryTrackingFileName = "[trace file na
 Press Enter for forward step, Backspace for backward step
 
 ## Sample run
-- Main  menu       
+- Test run     
 
 <img src="./sample_run/sample_run.png" width="300" align="center">
 
@@ -121,7 +125,7 @@ contains global variables
 # AI info
 <img src="./sample_run/window 2.png" width="200" align="center">
 
-The agent retrieves state information about tiles that are closer than 2 units (window distance 2).            
+The agent retrieves state information for tiles near two grids (window distance 2).            
 Tile information is classified into the following three types:          
 
 White tile (Score +1 when moving)          
